@@ -85,11 +85,7 @@
 
 /* ── Dropdown panel ── */
 .select-dropdown {
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
-  right: 0;
-  min-width: 100%;
+  min-width: 160px;
   background: var(--surface);
   border: 1.5px solid var(--border);
   border-radius: var(--radius-lg);
