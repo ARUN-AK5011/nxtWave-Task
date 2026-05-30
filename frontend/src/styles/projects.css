@@ -181,6 +181,12 @@
   gap: var(--sp-4);
 }
 
+/* Full-width form card — spans entire grid row so dates never overflow */
+.project-form-card-wide {
+  grid-column: 1 / -1;
+  max-width: 460px;
+}
+
 .project-form-title {
   font-size: var(--text-base);
   font-weight: 700;

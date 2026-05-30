@@ -5,6 +5,7 @@ import type { Project, UserBasic } from '../types'
 import { useToast } from '../context/ToastContext'
 import CustomSelect from './CustomSelect'
 import AssigneeSelect from './AssigneeSelect'
+import DatePicker from './DatePicker'
 import api from '../services/api'
 import '../styles/modal.css'
 
@@ -13,7 +14,6 @@ interface FormData {
   title: string
   description: string
   priority: string
-  due_date: string
 }
 
 interface Props {
@@ -31,8 +31,9 @@ const PRIORITY_OPTIONS = [
 
 export default function CreateTaskModal({ projects, onClose, onCreated }: Props) {
   const { showToast } = useToast()
-  const [members, setMembers]           = useState<UserBasic[]>([])
+  const [members, setMembers]                     = useState<UserBasic[]>([])
   const [selectedAssignees, setSelectedAssignees] = useState<string[]>([])
+  const [dueDate, setDueDate]                     = useState<Date | null>(null)
 
   const { register, control, handleSubmit, formState: { isSubmitting, errors } } = useForm<FormData>()
 
@@ -55,7 +56,7 @@ export default function CreateTaskModal({ projects, onClose, onCreated }: Props)
       await api.post('/tasks', {
         ...data,
         assignee_ids: selectedAssignees,
-        due_date: data.due_date ? new Date(data.due_date).toISOString() : undefined,
+        due_date: dueDate ? dueDate.toISOString() : undefined,
       })
       showToast('Task created', 'success', data.title)
       onCreated()
@@ -161,7 +162,12 @@ export default function CreateTaskModal({ projects, onClose, onCreated }: Props)
 
               <div className="form-group">
                 <label className="form-label">Due Date</label>
-                <input className="form-input" type="datetime-local" {...register('due_date')} />
+                <DatePicker
+                  value={dueDate}
+                  onChange={setDueDate}
+                  placeholder="Pick due date"
+                  minDate={new Date()}
+                />
               </div>
             </div>
 
