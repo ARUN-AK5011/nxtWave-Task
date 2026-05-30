@@ -2,96 +2,148 @@ import { useState, useEffect, useCallback } from 'react'
 import type { Task, TaskStatus, Project } from '../types'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
+import { useToast } from '../context/ToastContext'
 import TaskCard from '../components/TaskCard'
 import CreateTaskModal from '../components/CreateTaskModal'
+import '../styles/dashboard.css'
 
 const COLUMNS: TaskStatus[] = ['TODO', 'IN_PROGRESS', 'IN_REVIEW', 'DONE', 'BLOCKED']
-const COL_LABELS: Record<TaskStatus, string> = {
-  TODO: 'To Do',
-  IN_PROGRESS: 'In Progress',
-  IN_REVIEW: 'In Review',
-  DONE: 'Done',
-  BLOCKED: 'Blocked',
-}
-const COL_COLORS: Record<TaskStatus, string> = {
-  TODO: '#6c757d',
-  IN_PROGRESS: '#4361ee',
-  IN_REVIEW: '#f77f00',
-  DONE: '#2dc653',
-  BLOCKED: '#e63946',
+
+const COL_META: Record<TaskStatus, { label: string; dot: string; empty: string; icon: string }> = {
+  TODO:        { label: 'To Do',       dot: 'var(--col-todo)',        empty: 'No tasks here yet',        icon: '○' },
+  IN_PROGRESS: { label: 'In Progress', dot: 'var(--col-in-progress)', empty: 'Nothing in progress',      icon: '◑' },
+  IN_REVIEW:   { label: 'In Review',   dot: 'var(--col-in-review)',   empty: 'Nothing awaiting review',  icon: '◷' },
+  DONE:        { label: 'Done',        dot: 'var(--col-done)',        empty: 'No completed tasks yet',   icon: '✓' },
+  BLOCKED:     { label: 'Blocked',     dot: 'var(--col-blocked)',     empty: 'No blockers — great!',     icon: '⊘' },
 }
 
 export default function DashboardPage() {
   const { user, logout } = useAuth()
-  const [tasks, setTasks] = useState<Task[]>([])
+  const { showToast } = useToast()
+  const [tasks, setTasks]       = useState<Task[]>([])
   const [projects, setProjects] = useState<Project[]>([])
   const [showCreate, setShowCreate] = useState(false)
-  const [filterAssignee, _setFilterAssignee] = useState('')
   const [filterPriority, setFilterPriority] = useState('')
 
   const fetchTasks = useCallback(async () => {
-    const params: Record<string, string> = {}
-    if (filterAssignee) params.assignee_id = filterAssignee
-    if (filterPriority) params.priority = filterPriority
-    const { data } = await api.get('/tasks', { params })
-    setTasks(data.data ?? [])
-  }, [filterAssignee, filterPriority])
+    try {
+      const params: Record<string, string> = {}
+      if (filterPriority) params.priority = filterPriority
+      const { data } = await api.get('/tasks', { params })
+      setTasks(data.data ?? [])
+    } catch {
+      showToast('Failed to load tasks', 'error', 'Please refresh the page')
+    }
+  }, [filterPriority, showToast])
 
   const fetchProjects = useCallback(async () => {
-    const { data } = await api.get('/projects')
-    setProjects(data.data ?? [])
-  }, [])
+    try {
+      const { data } = await api.get('/projects')
+      setProjects(data.data ?? [])
+    } catch {
+      showToast('Failed to load projects', 'error')
+    }
+  }, [showToast])
 
   useEffect(() => { fetchTasks() }, [fetchTasks])
   useEffect(() => { fetchProjects() }, [fetchProjects])
 
-  const tasksByStatus = (status: TaskStatus) => tasks.filter(t => t.status === status)
-
+  const tasksByStatus = (s: TaskStatus) => tasks.filter(t => t.status === s)
   const canCreate = user?.role === 'ADMIN' || user?.role === 'MANAGER'
 
+  const initials = user?.name
+    ? user.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
+    : '?'
+
   return (
-    <div style={styles.page}>
-      <header style={styles.header}>
-        <div style={styles.headerLeft}>
-          <span style={styles.logo}>Task Tracker</span>
-          <span style={styles.orgBadge}>{user?.role}</span>
+    <div className="dashboard">
+      {/* ── Header ── */}
+      <header className="header">
+        <div className="header-left">
+          <div className="header-logo">
+            <div className="header-logo-icon">📋</div>
+            <span className="header-logo-text">TaskTracker</span>
+          </div>
+          <div className="header-divider" />
+          <span className="header-role-badge">{user?.role}</span>
         </div>
-        <div style={styles.headerRight}>
-          <span style={styles.userName}>{user?.name}</span>
-          <button style={styles.logoutBtn} onClick={logout}>Logout</button>
+
+        <div className="header-right">
+          <div className="header-user">
+            <div className="header-avatar">{initials}</div>
+            <span className="header-user-name">{user?.name}</span>
+          </div>
+          <button className="header-logout-btn" onClick={logout}>
+            <span>↩</span> Logout
+          </button>
         </div>
       </header>
 
-      <div style={styles.toolbar}>
-        <div style={styles.filters}>
-          <select style={styles.select} value={filterPriority} onChange={e => setFilterPriority(e.target.value)}>
+      {/* ── Toolbar ── */}
+      <div className="toolbar">
+        <div className="toolbar-left">
+          <span className="toolbar-label">Filter:</span>
+          <select
+            className="filter-select"
+            value={filterPriority}
+            onChange={e => setFilterPriority(e.target.value)}
+          >
             <option value="">All Priorities</option>
             <option value="LOW">Low</option>
             <option value="MEDIUM">Medium</option>
             <option value="HIGH">High</option>
           </select>
+          <span className="task-count-badge">{tasks.length} task{tasks.length !== 1 ? 's' : ''}</span>
         </div>
+
         {canCreate && (
-          <button style={styles.createBtn} onClick={() => setShowCreate(true)}>+ New Task</button>
+          <button className="btn-create" onClick={() => setShowCreate(true)}>
+            <span className="btn-create-icon">+</span>
+            New Task
+          </button>
         )}
       </div>
 
-      <div style={styles.board}>
-        {COLUMNS.map(status => (
-          <div key={status} style={styles.column}>
-            <div style={{ ...styles.columnHeader, borderTop: `3px solid ${COL_COLORS[status]}` }}>
-              <span style={styles.columnTitle}>{COL_LABELS[status]}</span>
-              <span style={styles.columnCount}>{tasksByStatus(status).length}</span>
-            </div>
-            <div style={styles.cardList}>
-              {tasksByStatus(status).map(task => (
-                <TaskCard key={task.id} task={task} onUpdate={fetchTasks} currentUser={user!} />
-              ))}
-            </div>
-          </div>
-        ))}
+      {/* ── Board ── */}
+      <div className="board-wrap">
+        <div className="board">
+          {COLUMNS.map(status => {
+            const col      = COL_META[status]
+            const colTasks = tasksByStatus(status)
+            return (
+              <div key={status} className="column">
+                <div className="column-header">
+                  <div className="column-header-left">
+                    <div className="column-dot" style={{ background: col.dot }} />
+                    <span className="column-title">{col.label}</span>
+                  </div>
+                  <span className="column-count">{colTasks.length}</span>
+                </div>
+
+                <div className="column-body">
+                  {colTasks.length === 0 ? (
+                    <div className="column-empty">
+                      <span className="column-empty-icon">{col.icon}</span>
+                      <span className="column-empty-text">{col.empty}</span>
+                    </div>
+                  ) : (
+                    colTasks.map(task => (
+                      <TaskCard
+                        key={task.id}
+                        task={task}
+                        onUpdate={fetchTasks}
+                        currentUser={user!}
+                      />
+                    ))
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
       </div>
 
+      {/* ── Create Modal ── */}
       {showCreate && (
         <CreateTaskModal
           projects={projects}
@@ -99,30 +151,6 @@ export default function DashboardPage() {
           onCreated={() => { setShowCreate(false); fetchTasks() }}
         />
       )}
-
-      {/* suppress unused variable warning */}
-      <span style={{ display: 'none' }}>{filterAssignee}</span>
     </div>
   )
-}
-
-const styles: Record<string, React.CSSProperties> = {
-  page: { minHeight: '100vh', background: '#f0f2f5', fontFamily: 'system-ui, sans-serif' },
-  header: { background: '#1a1a2e', color: '#fff', padding: '0.8rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' },
-  headerLeft: { display: 'flex', alignItems: 'center', gap: '1rem' },
-  logo: { fontSize: '1.2rem', fontWeight: 700, color: '#fff' },
-  orgBadge: { background: '#4361ee', padding: '0.2rem 0.6rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600 },
-  headerRight: { display: 'flex', alignItems: 'center', gap: '1rem' },
-  userName: { color: '#ccc', fontSize: '0.9rem' },
-  logoutBtn: { background: 'transparent', border: '1px solid #555', color: '#ccc', padding: '0.3rem 0.7rem', borderRadius: '4px', cursor: 'pointer' },
-  toolbar: { padding: '1rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' },
-  filters: { display: 'flex', gap: '0.5rem' },
-  select: { padding: '0.4rem 0.7rem', border: '1px solid #ddd', borderRadius: '6px', background: '#fff', fontSize: '0.9rem' },
-  createBtn: { background: '#4361ee', color: '#fff', border: 'none', padding: '0.5rem 1.2rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 },
-  board: { display: 'flex', gap: '1rem', padding: '0 1.5rem 1.5rem', overflowX: 'auto', alignItems: 'flex-start' },
-  column: { minWidth: '260px', maxWidth: '300px', flex: '1', background: '#fff', borderRadius: '8px', boxShadow: '0 1px 4px rgba(0,0,0,.08)' },
-  columnHeader: { padding: '0.8rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' },
-  columnTitle: { fontWeight: 600, fontSize: '0.9rem', color: '#333' },
-  columnCount: { background: '#f0f2f5', borderRadius: '12px', padding: '0.1rem 0.5rem', fontSize: '0.8rem', color: '#666' },
-  cardList: { padding: '0 0.5rem 0.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' },
 }
