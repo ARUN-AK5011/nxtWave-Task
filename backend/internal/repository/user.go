@@ -73,3 +73,11 @@ func (r *UserRepo) CreateOrg(ctx context.Context, org *models.Organization) erro
 		org.ID, org.Name,
 	).Scan(&org.CreatedAt)
 }
+
+func (r *UserRepo) GetOrgByID(ctx context.Context, id string) (*models.Organization, error) {
+	org := &models.Organization{}
+	err := r.db.QueryRow(ctx, `
+		SELECT id, name, created_at FROM organizations WHERE id = $1`, id,
+	).Scan(&org.ID, &org.Name, &org.CreatedAt)
+	return org, err
+}

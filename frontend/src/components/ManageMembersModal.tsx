@@ -71,10 +71,28 @@ export default function ManageMembersModal({ onClose }: Props) {
         </div>
 
         <div className="modal-body">
-          <p className="manage-info-text">
-            To add a new member, have them register — they'll join your organisation automatically.
-            Use the role selector below to promote or demote members.
-          </p>
+          {/* Org ID share box */}
+          <div className="org-id-box">
+            <div className="org-id-label">
+              <span>🔗</span>
+              <span>Share this Org ID with teammates so they can join</span>
+            </div>
+            <div className="org-id-row">
+              <code className="org-id-value">{currentUser?.organization_id}</code>
+              <button
+                className="btn-copy"
+                onClick={() => {
+                  navigator.clipboard.writeText(currentUser?.organization_id ?? '')
+                  showToast('Org ID copied!', 'success')
+                }}
+              >
+                Copy
+              </button>
+            </div>
+            <p className="org-id-hint">
+              They register → choose "Join existing" → paste this ID → join as <strong>MEMBER</strong>
+            </p>
+          </div>
 
           <div className="manage-list">
             {loading ? (

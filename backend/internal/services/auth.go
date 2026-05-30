@@ -33,10 +33,11 @@ func NewAuthService(userRepo *repository.UserRepo, jwtSecret, jwtRefreshSecret s
 }
 
 type RegisterInput struct {
-	Name     string `json:"name" binding:"required,min=2"`
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,min=8"`
-	OrgName  string `json:"org_name" binding:"required,min=2"`
+	Name     string  `json:"name"     binding:"required,min=2"`
+	Email    string  `json:"email"    binding:"required,email"`
+	Password string  `json:"password" binding:"required,min=8"`
+	OrgName  string  `json:"org_name"`
+	OrgID    *string `json:"org_id"`
 }
 
 type LoginInput struct {
@@ -51,6 +52,14 @@ type AuthResponse struct {
 }
 
 func (s *AuthService) Register(ctx context.Context, in RegisterInput) (*AuthResponse, error) {
+	// Validate: must provide either org_name (create) or org_id (join)
+	if in.OrgID == nil && in.OrgName == "" {
+		return nil, apperr.Validation("provide org_name to create an organisation or org_id to join one")
+	}
+	if in.OrgID != nil && in.OrgName != "" {
+		return nil, apperr.Validation("provide either org_name or org_id, not both")
+	}
+
 	if _, err := s.userRepo.GetByEmail(ctx, in.Email); err == nil {
 		return nil, apperr.Conflict("email already registered")
 	}
@@ -60,18 +69,37 @@ func (s *AuthService) Register(ctx context.Context, in RegisterInput) (*AuthResp
 		return nil, apperr.Internal()
 	}
 
-	org := &models.Organization{ID: uuid.NewString(), Name: in.OrgName}
-	if err := s.userRepo.CreateOrg(ctx, org); err != nil {
-		return nil, apperr.Internal()
+	var orgID string
+	var role models.Role
+
+	if in.OrgID != nil {
+		// Join existing org → MEMBER
+		org, err := s.userRepo.GetOrgByID(ctx, *in.OrgID)
+		if err != nil {
+			return nil, apperr.New(404, "ORG_NOT_FOUND", "organisation not found — check the org ID and try again")
+		}
+		orgID = org.ID
+		role = models.RoleMember
+	} else {
+		// Create new org → ADMIN
+		if len(in.OrgName) < 2 {
+			return nil, apperr.Validation("org_name must be at least 2 characters")
+		}
+		org := &models.Organization{ID: uuid.NewString(), Name: in.OrgName}
+		if err := s.userRepo.CreateOrg(ctx, org); err != nil {
+			return nil, apperr.Internal()
+		}
+		orgID = org.ID
+		role = models.RoleAdmin
 	}
 
 	user := &models.User{
 		ID:             uuid.NewString(),
-		OrganizationID: org.ID,
+		OrganizationID: orgID,
 		Name:           in.Name,
 		Email:          in.Email,
 		PasswordHash:   string(hash),
-		Role:           models.RoleAdmin,
+		Role:           role,
 	}
 	if err := s.userRepo.Create(ctx, user); err != nil {
 		return nil, apperr.Internal()

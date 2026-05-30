@@ -232,6 +232,51 @@
   cursor: not-allowed;
 }
 
+/* Mode toggle (create / join) */
+.mode-toggle {
+  display: flex;
+  gap: var(--sp-2);
+  background: var(--gray-100);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--sp-1);
+  margin-bottom: var(--sp-5);
+}
+
+.mode-tab {
+  flex: 1;
+  padding: 0.5rem var(--sp-3);
+  background: transparent;
+  border: none;
+  border-radius: calc(var(--radius-md) - 2px);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background var(--t), color var(--t), box-shadow var(--t);
+}
+
+.mode-tab.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Role hint box */
+.auth-role-hint {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  background: var(--primary-light);
+  border: 1px solid rgba(67, 97, 238, 0.2);
+  border-radius: var(--radius-md);
+  padding: var(--sp-3) var(--sp-4);
+  line-height: 1.6;
+}
+
+.auth-role-hint strong {
+  color: var(--primary);
+}
+
 /* Divider / footer link */
 .auth-footer {
   text-align: center;
