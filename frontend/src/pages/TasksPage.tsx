@@ -12,6 +12,7 @@ import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import TaskCard from '../components/TaskCard'
 import CreateTaskModal from '../components/CreateTaskModal'
+import TaskDetailModal from '../components/TaskDetailModal'
 import CustomSelect from '../components/CustomSelect'
 import '../styles/layout.css'
 import '../styles/tasks.css'
@@ -33,7 +34,8 @@ export default function TasksPage() {
   const { showToast } = useToast()
   const [tasks, setTasks]       = useState<Task[]>([])
   const [projects, setProjects] = useState<Project[]>([])
-  const [showCreate, setShowCreate] = useState(false)
+  const [showCreate, setShowCreate]     = useState(false)
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [filterPriority, setFilterPriority] = useState('')
 
   const fetchTasks = useCallback(async () => {
@@ -123,7 +125,13 @@ export default function TasksPage() {
                     </div>
                   ) : (
                     colTasks.map(task => (
-                      <TaskCard key={task.id} task={task} onUpdate={fetchTasks} currentUser={user!} />
+                      <TaskCard
+                        key={task.id}
+                        task={task}
+                        onUpdate={fetchTasks}
+                        currentUser={user!}
+                        onOpenDetail={setSelectedTask}
+                      />
                     ))
                   )}
                 </div>
@@ -138,6 +146,15 @@ export default function TasksPage() {
           projects={projects}
           onClose={() => setShowCreate(false)}
           onCreated={() => { setShowCreate(false); fetchTasks() }}
+        />
+      )}
+
+      {selectedTask && (
+        <TaskDetailModal
+          task={selectedTask}
+          projectName={projects.find(p => p.id === selectedTask.project_id)?.name ?? 'Unknown project'}
+          onClose={() => setSelectedTask(null)}
+          onStatusUpdated={() => { fetchTasks(); setSelectedTask(null) }}
         />
       )}
     </div>

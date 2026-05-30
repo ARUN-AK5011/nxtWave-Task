@@ -11,7 +11,7 @@ import '../styles/layout.css'
 import '../styles/projects.css'
 import '../styles/modal.css'
 
-interface FormData { name: string; description: string }
+interface FormData { name: string; description: string; start_date: string; end_date: string }
 
 export default function ProjectsPage() {
   const { user } = useAuth()
@@ -38,7 +38,11 @@ export default function ProjectsPage() {
 
   const onSubmit = async (data: FormData) => {
     try {
-      await api.post('/projects', data)
+      await api.post('/projects', {
+        ...data,
+        start_date: data.start_date ? new Date(data.start_date).toISOString() : undefined,
+        end_date:   data.end_date   ? new Date(data.end_date).toISOString()   : undefined,
+      })
       showToast('Project created', 'success', data.name)
       reset(); setShowForm(false); fetchProjects()
     } catch (e: unknown) {
@@ -93,9 +97,19 @@ export default function ProjectsPage() {
                     <input className="form-input" placeholder="e.g. Backend API" {...register('name', { required: 'Required' })} />
                     {errors.name && <span className="form-error">{errors.name.message}</span>}
                   </div>
-                  <div className="form-group" style={{ marginBottom: 'var(--sp-4)' }}>
+                  <div className="form-group" style={{ marginBottom: 'var(--sp-3)' }}>
                     <label className="form-label">Description</label>
                     <input className="form-input" placeholder="Optional description" {...register('description')} />
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-3)', marginBottom: 'var(--sp-3)' }}>
+                    <div className="form-group">
+                      <label className="form-label">Start Date</label>
+                      <input className="form-input" type="date" {...register('start_date')} />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">End Date</label>
+                      <input className="form-input" type="date" {...register('end_date')} />
+                    </div>
                   </div>
                   <div className="project-form-actions">
                     <button type="button" className="btn-cancel" style={{ flex: 1 }} onClick={() => { setShowForm(false); reset() }}>Cancel</button>
@@ -131,7 +145,10 @@ export default function ProjectsPage() {
                     <div className="project-card-meta">
                       <p className="project-card-name">{p.name}</p>
                       <p className="project-card-date">
-                        Created {new Date(p.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        {p.start_date && p.end_date
+                          ? `${new Date(p.start_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} → ${new Date(p.end_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`
+                          : `Created ${new Date(p.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`
+                        }
                       </p>
                     </div>
                   </div>

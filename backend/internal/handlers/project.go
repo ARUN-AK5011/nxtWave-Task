@@ -6,6 +6,7 @@ import (
 	"task-tracker/internal/apperr"
 	"task-tracker/internal/models"
 	"task-tracker/internal/repository"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -22,8 +23,10 @@ func NewProjectHandler(repo *repository.ProjectRepo) *ProjectHandler {
 
 func (h *ProjectHandler) Create(c *gin.Context) {
 	var body struct {
-		Name        string `json:"name" binding:"required,min=1,max=255"`
-		Description string `json:"description"`
+		Name        string     `json:"name" binding:"required,min=1,max=255"`
+		Description string     `json:"description"`
+		StartDate   *time.Time `json:"start_date"`
+		EndDate     *time.Time `json:"end_date"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, apperr.Validation(err.Error()))
@@ -34,6 +37,8 @@ func (h *ProjectHandler) Create(c *gin.Context) {
 		OrganizationID: currentOrgID(c),
 		Name:           body.Name,
 		Description:    body.Description,
+		StartDate:      body.StartDate,
+		EndDate:        body.EndDate,
 		CreatedByID:    currentUserID(c),
 	}
 	if err := h.repo.Create(context.Background(), p); err != nil {

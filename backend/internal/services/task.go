@@ -27,7 +27,7 @@ type CreateTaskInput struct {
 	Title       string     `json:"title" binding:"required,min=1,max=255"`
 	Description string     `json:"description"`
 	Priority    string     `json:"priority" binding:"required,oneof=LOW MEDIUM HIGH"`
-	AssigneeID  *string    `json:"assignee_id"`
+	AssigneeIDs []string   `json:"assignee_ids"`
 	DueDate     *time.Time `json:"due_date"`
 }
 
@@ -35,7 +35,7 @@ type UpdateTaskInput struct {
 	Title       string     `json:"title" binding:"omitempty,min=1,max=255"`
 	Description string     `json:"description"`
 	Priority    string     `json:"priority" binding:"omitempty,oneof=LOW MEDIUM HIGH"`
-	AssigneeID  *string    `json:"assignee_id"`
+	AssigneeIDs []string   `json:"assignee_ids"`
 	DueDate     *time.Time `json:"due_date"`
 }
 
@@ -55,25 +55,24 @@ func (s *TaskService) Create(ctx context.Context, orgID, createdByID string, in 
 		Description:    in.Description,
 		Priority:       models.Priority(in.Priority),
 		Status:         models.StatusTodo,
-		AssigneeID:     in.AssigneeID,
 		CreatedByID:    createdByID,
 		DueDate:        in.DueDate,
 	}
-	if err := s.taskRepo.Create(ctx, task); err != nil {
+	if err := s.taskRepo.Create(ctx, task, in.AssigneeIDs); err != nil {
 		return nil, apperr.Internal()
 	}
-	s.invalidateAssigneeCache(ctx, in.AssigneeID)
+	s.invalidateAssigneesCache(ctx, in.AssigneeIDs)
 	return task, nil
 }
 
-func (s *TaskService) List(ctx context.Context, orgID string, f repository.TaskFilter, userID string, role models.Role) ([]*models.TaskWithAssignee, int, error) {
+func (s *TaskService) List(ctx context.Context, orgID string, f repository.TaskFilter, userID string, role models.Role) ([]*models.Task, int, error) {
 	if role == models.RoleMember {
 		f.AssigneeID = userID
 	}
 
 	if f.AssigneeID != "" && role != models.RoleMember {
 		cacheKey := cache.TaskListKey(f.AssigneeID, f.Status, f.Priority, f.Page, f.Limit)
-		var cached []*models.TaskWithAssignee
+		var cached []*models.Task
 		if err := s.cache.Get(ctx, cacheKey, &cached); err == nil {
 			return cached, -1, nil
 		}
@@ -92,7 +91,7 @@ func (s *TaskService) List(ctx context.Context, orgID string, f repository.TaskF
 	return tasks, total, nil
 }
 
-func (s *TaskService) GetByID(ctx context.Context, id, orgID string) (*models.TaskWithAssignee, error) {
+func (s *TaskService) GetByID(ctx context.Context, id, orgID string) (*models.Task, error) {
 	task, err := s.taskRepo.GetByID(ctx, id, orgID)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -103,7 +102,7 @@ func (s *TaskService) GetByID(ctx context.Context, id, orgID string) (*models.Ta
 	return task, nil
 }
 
-func (s *TaskService) Update(ctx context.Context, id, orgID string, in UpdateTaskInput) (*models.TaskWithAssignee, error) {
+func (s *TaskService) Update(ctx context.Context, id, orgID string, in UpdateTaskInput) (*models.Task, error) {
 	task, err := s.taskRepo.GetByID(ctx, id, orgID)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -114,6 +113,13 @@ func (s *TaskService) Update(ctx context.Context, id, orgID string, in UpdateTas
 	if in.DueDate != nil && in.DueDate.Before(time.Now()) {
 		return nil, apperr.Validation("due_date must be a future date")
 	}
+
+	// Capture old assignee IDs for cache invalidation.
+	oldAssigneeIDs, err := s.taskRepo.GetAssigneeIDs(ctx, id)
+	if err != nil {
+		return nil, apperr.Internal()
+	}
+
 	if in.Title != "" {
 		task.Title = in.Title
 	}
@@ -121,19 +127,24 @@ func (s *TaskService) Update(ctx context.Context, id, orgID string, in UpdateTas
 	if in.Priority != "" {
 		task.Priority = models.Priority(in.Priority)
 	}
-	oldAssignee := task.AssigneeID
-	task.AssigneeID = in.AssigneeID
 	task.DueDate = in.DueDate
 
-	if err := s.taskRepo.Update(ctx, &task.Task); err != nil {
+	if err := s.taskRepo.Update(ctx, task, in.AssigneeIDs); err != nil {
 		return nil, apperr.Internal()
 	}
-	s.invalidateAssigneeCache(ctx, oldAssignee)
-	s.invalidateAssigneeCache(ctx, in.AssigneeID)
-	return task, nil
+
+	s.invalidateAssigneesCache(ctx, oldAssigneeIDs)
+	s.invalidateAssigneesCache(ctx, in.AssigneeIDs)
+
+	// Reload with fresh assignees.
+	updated, err := s.taskRepo.GetByID(ctx, id, orgID)
+	if err != nil {
+		return nil, apperr.Internal()
+	}
+	return updated, nil
 }
 
-func (s *TaskService) UpdateStatus(ctx context.Context, id, orgID, requestorID string, role models.Role, in UpdateStatusInput) (*models.TaskWithAssignee, error) {
+func (s *TaskService) UpdateStatus(ctx context.Context, id, orgID, requestorID string, role models.Role, in UpdateStatusInput) (*models.Task, error) {
 	task, err := s.taskRepo.GetByID(ctx, id, orgID)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -142,9 +153,14 @@ func (s *TaskService) UpdateStatus(ctx context.Context, id, orgID, requestorID s
 		return nil, apperr.Internal()
 	}
 
-	isAssignee := task.AssigneeID != nil && *task.AssigneeID == requestorID
-	if role == models.RoleMember && !isAssignee {
-		return nil, apperr.New(http.StatusForbidden, "FORBIDDEN", "only the assignee or a manager can update task status")
+	if role == models.RoleMember {
+		isAssignee, err := s.taskRepo.IsAssignee(ctx, id, requestorID)
+		if err != nil {
+			return nil, apperr.Internal()
+		}
+		if !isAssignee {
+			return nil, apperr.New(http.StatusForbidden, "FORBIDDEN", "only the assignee or a manager can update task status")
+		}
 	}
 
 	newStatus := models.Status(in.Status)
@@ -155,29 +171,34 @@ func (s *TaskService) UpdateStatus(ctx context.Context, id, orgID, requestorID s
 	if err := s.taskRepo.UpdateStatus(ctx, id, orgID, newStatus); err != nil {
 		return nil, apperr.Internal()
 	}
-	s.invalidateAssigneeCache(ctx, task.AssigneeID)
+
+	// Invalidate caches for all assignees.
+	assigneeIDs, _ := s.taskRepo.GetAssigneeIDs(ctx, id)
+	s.invalidateAssigneesCache(ctx, assigneeIDs)
+
 	task.Status = newStatus
 	return task, nil
 }
 
 func (s *TaskService) Delete(ctx context.Context, id, orgID string) error {
-	task, err := s.taskRepo.GetByID(ctx, id, orgID)
+	_, err := s.taskRepo.GetByID(ctx, id, orgID)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return apperr.NotFound("task")
 		}
 		return apperr.Internal()
 	}
+	// Capture assignees before deletion for cache invalidation.
+	assigneeIDs, _ := s.taskRepo.GetAssigneeIDs(ctx, id)
 	if err := s.taskRepo.Delete(ctx, id, orgID); err != nil {
 		return apperr.Internal()
 	}
-	s.invalidateAssigneeCache(ctx, task.AssigneeID)
+	s.invalidateAssigneesCache(ctx, assigneeIDs)
 	return nil
 }
 
-func (s *TaskService) invalidateAssigneeCache(ctx context.Context, assigneeID *string) {
-	if assigneeID == nil {
-		return
+func (s *TaskService) invalidateAssigneesCache(ctx context.Context, ids []string) {
+	for _, id := range ids {
+		_ = s.cache.DelPattern(ctx, cache.TaskListPattern(id))
 	}
-	_ = s.cache.DelPattern(ctx, cache.TaskListPattern(*assigneeID))
 }

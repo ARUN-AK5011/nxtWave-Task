@@ -17,7 +17,6 @@ const (
 	StatusBlocked    Status = "BLOCKED"
 )
 
-// validTransitions defines allowed status moves
 var validTransitions = map[Status][]Status{
 	StatusTodo:       {StatusInProgress, StatusBlocked},
 	StatusInProgress: {StatusInReview, StatusBlocked},
@@ -27,11 +26,7 @@ var validTransitions = map[Status][]Status{
 }
 
 func (s Status) CanTransitionTo(next Status) bool {
-	allowed, ok := validTransitions[s]
-	if !ok {
-		return false
-	}
-	for _, a := range allowed {
+	for _, a := range validTransitions[s] {
 		if a == next {
 			return true
 		}
@@ -40,33 +35,39 @@ func (s Status) CanTransitionTo(next Status) bool {
 }
 
 type Task struct {
-	ID             string    `json:"id" db:"id"`
-	OrganizationID string    `json:"organization_id" db:"organization_id"`
-	ProjectID      string    `json:"project_id" db:"project_id"`
-	Title          string    `json:"title" db:"title"`
-	Description    string    `json:"description" db:"description"`
-	Priority       Priority  `json:"priority" db:"priority"`
-	Status         Status    `json:"status" db:"status"`
-	AssigneeID     *string   `json:"assignee_id" db:"assignee_id"`
-	CreatedByID    string    `json:"created_by_id" db:"created_by_id"`
-	DueDate        *time.Time `json:"due_date" db:"due_date"`
-	CompletedAt    *time.Time `json:"completed_at" db:"completed_at"`
-	CreatedAt      time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt      time.Time `json:"updated_at" db:"updated_at"`
+	ID             string      `json:"id"`
+	OrganizationID string      `json:"organization_id"`
+	ProjectID      string      `json:"project_id"`
+	Title          string      `json:"title"`
+	Description    string      `json:"description"`
+	Priority       Priority    `json:"priority"`
+	Status         Status      `json:"status"`
+	Assignees      []UserBasic `json:"assignees"`
+	CreatedByID    string      `json:"created_by_id"`
+	DueDate        *time.Time  `json:"due_date"`
+	CompletedAt    *time.Time  `json:"completed_at"`
+	CreatedAt      time.Time   `json:"created_at"`
+	UpdatedAt      time.Time   `json:"updated_at"`
 }
 
-type TaskWithAssignee struct {
-	Task
-	AssigneeName  *string `json:"assignee_name" db:"assignee_name"`
-	AssigneeEmail *string `json:"assignee_email" db:"assignee_email"`
+type TaskComment struct {
+	ID        string    `json:"id"`
+	TaskID    string    `json:"task_id"`
+	UserID    string    `json:"user_id"`
+	UserName  string    `json:"user_name"`
+	UserRole  Role      `json:"user_role"`
+	Content   string    `json:"content"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type Project struct {
-	ID             string    `json:"id" db:"id"`
-	OrganizationID string    `json:"organization_id" db:"organization_id"`
-	Name           string    `json:"name" db:"name"`
-	Description    string    `json:"description" db:"description"`
-	CreatedByID    string    `json:"created_by_id" db:"created_by_id"`
-	CreatedAt      time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt      time.Time `json:"updated_at" db:"updated_at"`
+	ID             string     `json:"id"`
+	OrganizationID string     `json:"organization_id"`
+	Name           string     `json:"name"`
+	Description    string     `json:"description"`
+	StartDate      *time.Time `json:"start_date"`
+	EndDate        *time.Time `json:"end_date"`
+	CreatedByID    string     `json:"created_by_id"`
+	CreatedAt      time.Time  `json:"created_at"`
+	UpdatedAt      time.Time  `json:"updated_at"`
 }

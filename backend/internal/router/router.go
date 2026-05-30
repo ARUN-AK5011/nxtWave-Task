@@ -11,10 +11,11 @@ import (
 
 func New(
 	jwtSecret string,
-	authH *handlers.AuthHandler,
-	taskH *handlers.TaskHandler,
-	userH *handlers.UserHandler,
-	projH *handlers.ProjectHandler,
+	authH    *handlers.AuthHandler,
+	taskH    *handlers.TaskHandler,
+	userH    *handlers.UserHandler,
+	projH    *handlers.ProjectHandler,
+	commentH *handlers.CommentHandler,
 ) *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Logger(), gin.Recovery())
@@ -39,6 +40,9 @@ func New(
 	{
 		api.GET("/me", userH.Me)
 
+		// All authenticated users can fetch org members (for assignee picker).
+		api.GET("/members", userH.OrgMembers)
+
 		users := api.Group("/users")
 		users.Use(middleware.Require(models.RoleAdmin))
 		{
@@ -61,6 +65,10 @@ func New(
 			tasks.PUT("/:id", middleware.Require(models.RoleAdmin, models.RoleManager), taskH.Update)
 			tasks.PATCH("/:id/status", taskH.UpdateStatus)
 			tasks.DELETE("/:id", middleware.Require(models.RoleAdmin), taskH.Delete)
+
+			// Comments — all authenticated users; service enforces assignee/manager/admin for POST.
+			tasks.GET("/:id/comments", commentH.List)
+			tasks.POST("/:id/comments", commentH.Add)
 		}
 	}
 
