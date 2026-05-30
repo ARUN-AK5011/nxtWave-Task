@@ -42,7 +42,7 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
       <ToastProvider>
         <AuthProvider>
           <AppRoutes />

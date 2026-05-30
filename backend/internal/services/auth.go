@@ -51,8 +51,7 @@ type AuthResponse struct {
 }
 
 func (s *AuthService) Register(ctx context.Context, in RegisterInput) (*AuthResponse, error) {
-	existing, _ := s.userRepo.GetByEmail(ctx, in.Email)
-	if existing != nil {
+	if _, err := s.userRepo.GetByEmail(ctx, in.Email); err == nil {
 		return nil, apperr.Conflict("email already registered")
 	}
 

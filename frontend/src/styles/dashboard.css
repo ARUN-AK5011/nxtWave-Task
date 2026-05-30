@@ -180,6 +180,36 @@
   font-weight: 500;
 }
 
+/* Toolbar right group */
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+/* Secondary toolbar buttons (Projects / Members) */
+.btn-toolbar {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 0.45rem 0.9rem;
+  background: var(--surface);
+  color: var(--gray-700);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--t), border-color var(--t), color var(--t);
+  white-space: nowrap;
+}
+
+.btn-toolbar:hover {
+  background: var(--gray-100);
+  border-color: var(--gray-300);
+  color: var(--text);
+}
+
 /* New task button */
 .btn-create {
   display: inline-flex;

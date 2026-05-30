@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 	"task-tracker/internal/apperr"
 	"task-tracker/internal/services"
@@ -17,6 +18,7 @@ func NewAuthHandler(svc *services.AuthService) *AuthHandler {
 }
 
 func (h *AuthHandler) Register(c *gin.Context) {
+	fmt.Print("Register endpoint hit\n")
 	var in services.RegisterInput
 	if err := c.ShouldBindJSON(&in); err != nil {
 		c.JSON(http.StatusBadRequest, apperr.Validation(err.Error()))

@@ -5,6 +5,8 @@ import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import TaskCard from '../components/TaskCard'
 import CreateTaskModal from '../components/CreateTaskModal'
+import ManageProjectsModal from '../components/ManageProjectsModal'
+import ManageMembersModal from '../components/ManageMembersModal'
 import '../styles/dashboard.css'
 
 const COLUMNS: TaskStatus[] = ['TODO', 'IN_PROGRESS', 'IN_REVIEW', 'DONE', 'BLOCKED']
@@ -23,6 +25,8 @@ export default function DashboardPage() {
   const [tasks, setTasks]       = useState<Task[]>([])
   const [projects, setProjects] = useState<Project[]>([])
   const [showCreate, setShowCreate] = useState(false)
+  const [showProjects, setShowProjects] = useState(false)
+  const [showMembers, setShowMembers] = useState(false)
   const [filterPriority, setFilterPriority] = useState('')
 
   const fetchTasks = useCallback(async () => {
@@ -96,12 +100,22 @@ export default function DashboardPage() {
           <span className="task-count-badge">{tasks.length} task{tasks.length !== 1 ? 's' : ''}</span>
         </div>
 
-        {canCreate && (
-          <button className="btn-create" onClick={() => setShowCreate(true)}>
-            <span className="btn-create-icon">+</span>
-            New Task
+        <div className="toolbar-right">
+          <button className="btn-toolbar" onClick={() => setShowProjects(true)}>
+            📁 Projects
           </button>
-        )}
+          {user?.role === 'ADMIN' && (
+            <button className="btn-toolbar" onClick={() => setShowMembers(true)}>
+              👥 Members
+            </button>
+          )}
+          {canCreate && (
+            <button className="btn-create" onClick={() => setShowCreate(true)}>
+              <span className="btn-create-icon">+</span>
+              New Task
+            </button>
+          )}
+        </div>
       </div>
 
       {/* ── Board ── */}
@@ -143,12 +157,22 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* ── Create Modal ── */}
+      {/* ── Modals ── */}
       {showCreate && (
         <CreateTaskModal
           projects={projects}
           onClose={() => setShowCreate(false)}
-          onCreated={() => { setShowCreate(false); fetchTasks() }}
+          onCreated={() => { setShowCreate(false); fetchTasks(); fetchProjects() }}
+        />
+      )}
+      {showProjects && (
+        <ManageProjectsModal
+          onClose={() => { setShowProjects(false); fetchProjects() }}
+        />
+      )}
+      {showMembers && (
+        <ManageMembersModal
+          onClose={() => setShowMembers(false)}
         />
       )}
     </div>
