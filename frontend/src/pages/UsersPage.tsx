@@ -5,6 +5,7 @@ import GroupIcon from '@mui/icons-material/Group'
 import type { User, Role } from '../types'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
+import CustomSelect from '../components/CustomSelect'
 import api from '../services/api'
 import '../styles/layout.css'
 import '../styles/users.css'
@@ -111,11 +112,17 @@ export default function UsersPage() {
                 <div className="member-email">{m.email}</div>
                 <div>
                   {m.id !== currentUser?.id ? (
-                    <select className="role-select" value={m.role} disabled={updating === m.id} onChange={e => changeRole(m, e.target.value as Role)}>
-                      <option value="ADMIN">ADMIN</option>
-                      <option value="MANAGER">MANAGER</option>
-                      <option value="MEMBER">MEMBER</option>
-                    </select>
+                    <CustomSelect
+                      compact
+                      options={[
+                        { value: 'ADMIN',   label: 'Admin'   },
+                        { value: 'MANAGER', label: 'Manager' },
+                        { value: 'MEMBER',  label: 'Member'  },
+                      ]}
+                      value={m.role}
+                      onChange={val => changeRole(m, val as Role)}
+                      disabled={updating === m.id}
+                    />
                   ) : (
                     <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>—</span>
                   )}

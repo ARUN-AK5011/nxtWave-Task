@@ -12,6 +12,7 @@ import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import TaskCard from '../components/TaskCard'
 import CreateTaskModal from '../components/CreateTaskModal'
+import CustomSelect from '../components/CustomSelect'
 import '../styles/layout.css'
 import '../styles/tasks.css'
 
@@ -78,12 +79,19 @@ export default function TasksPage() {
 
       <div className="tasks-toolbar">
         <span className="filter-label">Filter by:</span>
-        <select className="filter-select" value={filterPriority} onChange={e => setFilterPriority(e.target.value)}>
-          <option value="">All Priorities</option>
-          <option value="LOW">Low</option>
-          <option value="MEDIUM">Medium</option>
-          <option value="HIGH">High</option>
-        </select>
+        <CustomSelect
+          compact
+          options={[
+            { value: '', label: 'All Priorities' },
+            { value: 'LOW',    label: 'Low' },
+            { value: 'MEDIUM', label: 'Medium' },
+            { value: 'HIGH',   label: 'High' },
+          ]}
+          value={filterPriority}
+          onChange={setFilterPriority}
+          placeholder="All Priorities"
+          className="filter-custom-select"
+        />
         <span className="tasks-count">{tasks.length} task{tasks.length !== 1 ? 's' : ''}</span>
       </div>
 

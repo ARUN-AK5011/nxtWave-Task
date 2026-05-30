@@ -39,6 +39,10 @@
   box-shadow: 0 0 0 3px var(--orange-ring);
 }
 
+.filter-custom-select {
+  width: 160px !important;
+}
+
 .tasks-count {
   margin-left: auto;
   font-size: var(--text-sm);

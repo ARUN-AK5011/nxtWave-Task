@@ -1,8 +1,9 @@
 import { useEffect } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import CloseIcon from '@mui/icons-material/Close'
 import type { Project } from '../types'
 import { useToast } from '../context/ToastContext'
+import CustomSelect from './CustomSelect'
 import api from '../services/api'
 import '../styles/modal.css'
 
@@ -20,9 +21,15 @@ interface Props {
   onCreated: () => void
 }
 
+const PRIORITY_OPTIONS = [
+  { value: 'LOW',    label: 'Low Priority'    },
+  { value: 'MEDIUM', label: 'Medium Priority' },
+  { value: 'HIGH',   label: 'High Priority'   },
+]
+
 export default function CreateTaskModal({ projects, onClose, onCreated }: Props) {
   const { showToast } = useToast()
-  const { register, handleSubmit, formState: { isSubmitting, errors } } = useForm<FormData>()
+  const { register, control, handleSubmit, formState: { isSubmitting, errors } } = useForm<FormData>()
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
@@ -45,6 +52,11 @@ export default function CreateTaskModal({ projects, onClose, onCreated }: Props)
     }
   }
 
+  const projectOptions = [
+    { value: '', label: 'Choose a project…' },
+    ...projects.map(p => ({ value: p.id, label: p.name })),
+  ]
+
   return (
     <div
       className="modal-overlay"
@@ -63,15 +75,29 @@ export default function CreateTaskModal({ projects, onClose, onCreated }: Props)
 
         <div className="modal-body">
           <form className="modal-form" onSubmit={handleSubmit(onSubmit)} noValidate>
+
+            {/* Project */}
             <div className="form-group">
               <label className="form-label">Project <span>*</span></label>
-              <select className="form-select" {...register('project_id', { required: 'Select a project' })}>
-                <option value="">Choose a project…</option>
-                {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-              </select>
+              <Controller
+                name="project_id"
+                control={control}
+                rules={{ required: 'Select a project' }}
+                defaultValue=""
+                render={({ field }) => (
+                  <CustomSelect
+                    options={projectOptions}
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder="Choose a project…"
+                    error={!!errors.project_id}
+                  />
+                )}
+              />
               {errors.project_id && <span className="form-error">{errors.project_id.message}</span>}
             </div>
 
+            {/* Title */}
             <div className="form-group">
               <label className="form-label">Title <span>*</span></label>
               <input
@@ -82,6 +108,7 @@ export default function CreateTaskModal({ projects, onClose, onCreated }: Props)
               {errors.title && <span className="form-error">{errors.title.message}</span>}
             </div>
 
+            {/* Description */}
             <div className="form-group">
               <label className="form-label">Description</label>
               <textarea
@@ -91,15 +118,25 @@ export default function CreateTaskModal({ projects, onClose, onCreated }: Props)
               />
             </div>
 
+            {/* Priority + Due date */}
             <div className="modal-form-row">
               <div className="form-group">
                 <label className="form-label">Priority <span>*</span></label>
-                <select className="form-select" {...register('priority', { required: 'Select priority' })}>
-                  <option value="">Select…</option>
-                  <option value="LOW">Low</option>
-                  <option value="MEDIUM">Medium</option>
-                  <option value="HIGH">High</option>
-                </select>
+                <Controller
+                  name="priority"
+                  control={control}
+                  rules={{ required: 'Select priority' }}
+                  defaultValue=""
+                  render={({ field }) => (
+                    <CustomSelect
+                      options={[{ value: '', label: 'Select priority…' }, ...PRIORITY_OPTIONS]}
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Select priority…"
+                      error={!!errors.priority}
+                    />
+                  )}
+                />
                 {errors.priority && <span className="form-error">{errors.priority.message}</span>}
               </div>
 
@@ -108,6 +145,7 @@ export default function CreateTaskModal({ projects, onClose, onCreated }: Props)
                 <input className="form-input" type="datetime-local" {...register('due_date')} />
               </div>
             </div>
+
           </form>
         </div>
 

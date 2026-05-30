@@ -1,0 +1,149 @@
+@import './variables.css';
+
+.custom-select {
+  position: relative;
+  width: 100%;
+}
+
+/* ── Trigger button ── */
+.select-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  padding: 0.62rem var(--sp-3);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  font-size: var(--text-base);
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color var(--t), box-shadow var(--t), background var(--t);
+  text-align: left;
+  font-family: var(--font);
+}
+
+.select-trigger:focus { outline: none; }
+
+.select-trigger:hover:not(:disabled) {
+  border-color: var(--border-hover);
+}
+
+.custom-select.open .select-trigger,
+.select-trigger:focus {
+  border-color: var(--orange);
+  box-shadow: 0 0 0 3px var(--orange-ring);
+}
+
+.custom-select.has-error .select-trigger {
+  border-color: var(--danger);
+  box-shadow: none;
+}
+
+.custom-select.has-error.open .select-trigger {
+  box-shadow: 0 0 0 3px rgba(239,68,68,0.18);
+}
+
+.select-trigger:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  background: var(--bg);
+}
+
+/* Compact variant for toolbar / table use */
+.custom-select.compact .select-trigger {
+  padding: 0.38rem 0.75rem;
+  font-size: var(--text-sm);
+  border-radius: var(--radius-sm);
+}
+
+/* ── Displayed value ── */
+.select-value {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.select-value.placeholder {
+  color: var(--text-light);
+}
+
+/* ── Chevron ── */
+.select-chevron {
+  color: var(--text-muted);
+  transition: transform var(--t), color var(--t);
+  flex-shrink: 0;
+}
+
+.custom-select.open .select-chevron {
+  transform: rotate(180deg);
+  color: var(--orange);
+}
+
+/* ── Dropdown panel ── */
+.select-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  min-width: 100%;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  z-index: 600;
+  overflow-y: auto;
+  max-height: 240px;
+  animation: selectDropIn 0.14s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: var(--sp-1) 0;
+}
+
+@keyframes selectDropIn {
+  from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)   scale(1);     }
+}
+
+/* ── Option row ── */
+.select-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem var(--sp-4);
+  font-size: var(--text-sm);
+  color: var(--text);
+  cursor: pointer;
+  transition: background var(--t-fast), color var(--t-fast);
+  font-family: var(--font);
+  gap: var(--sp-2);
+  user-select: none;
+}
+
+.select-option:hover {
+  background: var(--orange-light);
+  color: var(--orange);
+}
+
+.select-option.selected {
+  background: var(--orange-light);
+  color: var(--orange);
+  font-weight: 600;
+}
+
+.select-option.placeholder-opt {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.select-option-label { flex: 1; }
+
+.select-check { color: var(--orange); flex-shrink: 0; }
+
+/* ── Divider between placeholder and real options ── */
+.select-divider {
+  height: 1px;
+  background: var(--border);
+  margin: var(--sp-1) 0;
+}
