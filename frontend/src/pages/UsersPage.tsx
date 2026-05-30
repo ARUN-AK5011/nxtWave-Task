@@ -1,4 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
+import LinkIcon from '@mui/icons-material/Link'
+import ContentCopyIcon from '@mui/icons-material/ContentCopy'
+import GroupIcon from '@mui/icons-material/Group'
 import type { User, Role } from '../types'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
@@ -9,28 +12,22 @@ import '../styles/users.css'
 export default function UsersPage() {
   const { user: currentUser } = useAuth()
   const { showToast } = useToast()
-  const [members, setMembers] = useState<User[]>([])
-  const [loading, setLoading] = useState(true)
+  const [members, setMembers]  = useState<User[]>([])
+  const [loading, setLoading]  = useState(true)
   const [updating, setUpdating] = useState<string | null>(null)
 
   const fetchMembers = useCallback(async () => {
     try {
       const { data } = await api.get('/users')
       setMembers(data.data ?? [])
-    } catch {
-      showToast('Failed to load members', 'error')
-    } finally {
-      setLoading(false)
-    }
+    } catch { showToast('Failed to load members', 'error') }
+    finally { setLoading(false) }
   }, [showToast])
 
   useEffect(() => { fetchMembers() }, [fetchMembers])
 
   const changeRole = async (member: User, newRole: Role) => {
-    if (member.id === currentUser?.id) {
-      showToast('Cannot change your own role', 'warning')
-      return
-    }
+    if (member.id === currentUser?.id) { showToast('Cannot change your own role', 'warning'); return }
     setUpdating(member.id)
     try {
       await api.patch(`/users/${member.id}/role`, { role: newRole })
@@ -39,13 +36,10 @@ export default function UsersPage() {
     } catch (e: unknown) {
       const err = e as { response?: { data?: { message?: string } } }
       showToast('Failed to update role', 'error', err.response?.data?.message)
-    } finally {
-      setUpdating(null)
-    }
+    } finally { setUpdating(null) }
   }
 
-  const initials = (name: string) =>
-    name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
+  const initials = (name: string) => name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
 
   const copyOrgId = () => {
     navigator.clipboard.writeText(currentUser?.organization_id ?? '')
@@ -54,7 +48,6 @@ export default function UsersPage() {
 
   return (
     <div className="users-page">
-      {/* Topbar */}
       <div className="page-topbar">
         <div className="page-topbar-left">
           <h1 className="page-topbar-title">Users</h1>
@@ -68,22 +61,25 @@ export default function UsersPage() {
       </div>
 
       <div className="page-body">
-        {/* Invite box */}
         <div className="org-invite-box">
-          <div className="org-invite-icon">🔗</div>
+          <div className="org-invite-icon">
+            <LinkIcon style={{ fontSize: 22, color: 'var(--orange)' }} />
+          </div>
           <div className="org-invite-body">
             <p className="org-invite-title">Invite teammates</p>
             <p className="org-invite-sub">
-              Share your Organisation ID with teammates. They register → choose "Join existing" → paste this ID → join as <strong>MEMBER</strong>.
+              Share your Organisation ID. Teammates register, choose "Join existing", paste this ID, and join as <strong>MEMBER</strong>.
             </p>
             <div className="org-id-copy-row">
               <span className="org-id-text">{currentUser?.organization_id}</span>
-              <button className="btn-copy" onClick={copyOrgId}>Copy ID</button>
+              <button className="btn-copy" onClick={copyOrgId}>
+                <ContentCopyIcon style={{ fontSize: 13, marginRight: 4 }} />
+                Copy ID
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Members table */}
         <div className="members-card">
           <div className="members-table-head">
             <span className="th" style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Member</span>
@@ -93,13 +89,10 @@ export default function UsersPage() {
           </div>
 
           {loading ? (
-            <div className="users-empty">
-              <div className="spinner" />
-              <span className="users-empty-text">Loading members…</span>
-            </div>
+            <div className="users-empty"><div className="spinner" /><span className="users-empty-text">Loading…</span></div>
           ) : members.length === 0 ? (
             <div className="users-empty">
-              <span className="users-empty-icon">👥</span>
+              <GroupIcon style={{ fontSize: 48, opacity: 0.25 }} />
               <span className="users-empty-text">No team members yet. Share your Org ID to invite people.</span>
             </div>
           ) : (
@@ -114,21 +107,11 @@ export default function UsersPage() {
                     </div>
                   </div>
                 </div>
-
-                <div>
-                  <span className={`role-badge ${m.role.toLowerCase()}`}>{m.role}</span>
-                </div>
-
+                <div><span className={`role-badge ${m.role.toLowerCase()}`}>{m.role}</span></div>
                 <div className="member-email">{m.email}</div>
-
                 <div>
                   {m.id !== currentUser?.id ? (
-                    <select
-                      className="role-select"
-                      value={m.role}
-                      disabled={updating === m.id}
-                      onChange={e => changeRole(m, e.target.value as Role)}
-                    >
+                    <select className="role-select" value={m.role} disabled={updating === m.id} onChange={e => changeRole(m, e.target.value as Role)}>
                       <option value="ADMIN">ADMIN</option>
                       <option value="MANAGER">MANAGER</option>
                       <option value="MEMBER">MEMBER</option>

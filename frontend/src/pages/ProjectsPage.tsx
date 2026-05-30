@@ -1,5 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
+import AddIcon from '@mui/icons-material/Add'
+import FolderOpenIcon from '@mui/icons-material/FolderOpen'
+import DeleteOutlineIcon from '@mui/icons-material/DeleteForeverOutlined'
 import type { Project } from '../types'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
@@ -14,7 +17,7 @@ export default function ProjectsPage() {
   const { user } = useAuth()
   const { showToast } = useToast()
   const [projects, setProjects] = useState<Project[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading]   = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [deleting, setDeleting] = useState<string | null>(null)
 
@@ -27,11 +30,8 @@ export default function ProjectsPage() {
     try {
       const { data } = await api.get('/projects')
       setProjects(data.data ?? [])
-    } catch {
-      showToast('Failed to load projects', 'error')
-    } finally {
-      setLoading(false)
-    }
+    } catch { showToast('Failed to load projects', 'error') }
+    finally { setLoading(false) }
   }, [showToast])
 
   useEffect(() => { fetchProjects() }, [fetchProjects])
@@ -40,9 +40,7 @@ export default function ProjectsPage() {
     try {
       await api.post('/projects', data)
       showToast('Project created', 'success', data.name)
-      reset()
-      setShowForm(false)
-      fetchProjects()
+      reset(); setShowForm(false); fetchProjects()
     } catch (e: unknown) {
       const err = e as { response?: { data?: { message?: string } } }
       showToast('Failed to create project', 'error', err.response?.data?.message)
@@ -59,14 +57,11 @@ export default function ProjectsPage() {
     } catch (e: unknown) {
       const err = e as { response?: { data?: { message?: string } } }
       showToast('Failed to delete', 'error', err.response?.data?.message)
-    } finally {
-      setDeleting(null)
-    }
+    } finally { setDeleting(null) }
   }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* Topbar */}
       <div className="page-topbar">
         <div className="page-topbar-left">
           <h1 className="page-topbar-title">Projects</h1>
@@ -75,9 +70,7 @@ export default function ProjectsPage() {
         {canCreate && (
           <div className="page-topbar-right">
             <button className="btn-primary-orange" onClick={() => setShowForm(true)}>
-              <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd"/>
-              </svg>
+              <AddIcon style={{ fontSize: 16 }} />
               New Project
             </button>
           </div>
@@ -91,32 +84,21 @@ export default function ProjectsPage() {
           </div>
         ) : (
           <div className="projects-grid">
-            {/* Inline create form */}
             {showForm && (
               <div className="project-form-card">
                 <p className="project-form-title">New Project</p>
                 <form onSubmit={handleSubmit(onSubmit)}>
                   <div className="form-group" style={{ marginBottom: 'var(--sp-3)' }}>
                     <label className="form-label">Name <span style={{ color: 'var(--danger)' }}>*</span></label>
-                    <input
-                      className="form-input"
-                      placeholder="e.g. Backend API"
-                      {...register('name', { required: 'Required' })}
-                    />
+                    <input className="form-input" placeholder="e.g. Backend API" {...register('name', { required: 'Required' })} />
                     {errors.name && <span className="form-error">{errors.name.message}</span>}
                   </div>
                   <div className="form-group" style={{ marginBottom: 'var(--sp-4)' }}>
                     <label className="form-label">Description</label>
-                    <input
-                      className="form-input"
-                      placeholder="Optional description"
-                      {...register('description')}
-                    />
+                    <input className="form-input" placeholder="Optional description" {...register('description')} />
                   </div>
                   <div className="project-form-actions">
-                    <button type="button" className="btn-cancel" style={{ flex: 1 }} onClick={() => { setShowForm(false); reset() }}>
-                      Cancel
-                    </button>
+                    <button type="button" className="btn-cancel" style={{ flex: 1 }} onClick={() => { setShowForm(false); reset() }}>Cancel</button>
                     <button type="submit" className="btn-submit" style={{ flex: 2 }} disabled={isSubmitting}>
                       {isSubmitting ? 'Creating…' : 'Create Project'}
                     </button>
@@ -125,25 +107,27 @@ export default function ProjectsPage() {
               </div>
             )}
 
-            {/* Create card (when no form shown) */}
             {!showForm && canCreate && (
               <div className="project-create-card" onClick={() => setShowForm(true)}>
-                <div className="project-create-icon">+</div>
+                <div className="project-create-icon">
+                  <AddIcon style={{ fontSize: 22 }} />
+                </div>
                 <span className="project-create-label">Create new project</span>
               </div>
             )}
 
-            {/* Project cards */}
             {projects.length === 0 && !showForm ? (
               <div className="projects-empty">
-                <span className="projects-empty-icon">📁</span>
+                <FolderOpenIcon style={{ fontSize: 48, opacity: 0.25 }} />
                 <span className="projects-empty-text">No projects yet. Create your first one to start tracking tasks.</span>
               </div>
             ) : (
               projects.map(p => (
                 <div key={p.id} className="project-card">
                   <div className="project-card-header">
-                    <div className="project-icon-box">📁</div>
+                    <div className="project-icon-box">
+                      <FolderOpenIcon style={{ fontSize: 22, color: 'var(--orange)' }} />
+                    </div>
                     <div className="project-card-meta">
                       <p className="project-card-name">{p.name}</p>
                       <p className="project-card-date">
@@ -162,12 +146,9 @@ export default function ProjectsPage() {
                       ID: <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem' }}>{p.id.slice(0, 8)}…</code>
                     </span>
                     {canDelete && (
-                      <button
-                        className="btn-project-delete"
-                        onClick={() => deleteProject(p.id, p.name)}
-                        disabled={deleting === p.id}
-                      >
-                        {deleting === p.id ? '…' : '🗑 Delete'}
+                      <button className="btn-project-delete" onClick={() => deleteProject(p.id, p.name)} disabled={deleting === p.id}>
+                        <DeleteOutlineIcon style={{ fontSize: 14 }} />
+                        {deleting === p.id ? 'Deleting…' : 'Delete'}
                       </button>
                     )}
                   </div>

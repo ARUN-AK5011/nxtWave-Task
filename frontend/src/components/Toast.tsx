@@ -1,12 +1,17 @@
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutlined'
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined'
+import WarningAmberIcon from '@mui/icons-material/WarningAmber'
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
+import CloseIcon from '@mui/icons-material/Close'
 import { useToast } from '../context/ToastContext'
 import type { ToastType } from '../context/ToastContext'
 import '../styles/toast.css'
 
-const ICONS: Record<ToastType, string> = {
-  success: '✓',
-  error:   '✕',
-  warning: '⚠',
-  info:    'ℹ',
+const ICONS: Record<ToastType, React.ReactElement> = {
+  success: <CheckCircleOutlineIcon style={{ fontSize: 18 }} />,
+  error:   <ErrorOutlineIcon       style={{ fontSize: 18 }} />,
+  warning: <WarningAmberIcon       style={{ fontSize: 18 }} />,
+  info:    <InfoOutlinedIcon       style={{ fontSize: 18 }} />,
 }
 
 const TITLES: Record<ToastType, string> = {
@@ -18,7 +23,6 @@ const TITLES: Record<ToastType, string> = {
 
 export default function ToastContainer() {
   const { toasts, dismissToast } = useToast()
-
   if (toasts.length === 0) return null
 
   return (
@@ -41,9 +45,9 @@ export default function ToastContainer() {
           <button
             className="toast-close"
             onClick={() => dismissToast(toast.id)}
-            aria-label="Dismiss notification"
+            aria-label="Dismiss"
           >
-            ✕
+            <CloseIcon style={{ fontSize: 14 }} />
           </button>
 
           <div

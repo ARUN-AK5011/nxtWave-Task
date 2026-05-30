@@ -1,4 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
+import AddIcon from '@mui/icons-material/Add'
+import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked'
+import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty'
+import RateReviewIcon from '@mui/icons-material/RateReview'
+import TaskAltIcon from '@mui/icons-material/TaskAlt'
+import BlockIcon from '@mui/icons-material/Block'
+import type { SvgIconComponent } from '@mui/icons-material'
 import type { Task, TaskStatus, Project } from '../types'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
@@ -10,18 +17,20 @@ import '../styles/tasks.css'
 
 const COLUMNS: TaskStatus[] = ['TODO', 'IN_PROGRESS', 'IN_REVIEW', 'DONE', 'BLOCKED']
 
-const COL_META: Record<TaskStatus, { label: string; dot: string; empty: string; icon: string }> = {
-  TODO:        { label: 'To Do',       dot: 'var(--col-todo)',        empty: 'No tasks yet',          icon: '○' },
-  IN_PROGRESS: { label: 'In Progress', dot: 'var(--col-in-progress)', empty: 'Nothing in progress',   icon: '◑' },
-  IN_REVIEW:   { label: 'In Review',   dot: 'var(--col-in-review)',   empty: 'Nothing in review',     icon: '◷' },
-  DONE:        { label: 'Done',        dot: 'var(--col-done)',        empty: 'No completed tasks',    icon: '✓' },
-  BLOCKED:     { label: 'Blocked',     dot: 'var(--col-blocked)',     empty: 'No blockers — great!',  icon: '⊘' },
+interface ColMeta { label: string; dot: string; empty: string; Icon: SvgIconComponent }
+
+const COL_META: Record<TaskStatus, ColMeta> = {
+  TODO:        { label: 'To Do',       dot: 'var(--col-todo)',        empty: 'No tasks yet',         Icon: RadioButtonUncheckedIcon },
+  IN_PROGRESS: { label: 'In Progress', dot: 'var(--col-in-progress)', empty: 'Nothing in progress',  Icon: HourglassEmptyIcon },
+  IN_REVIEW:   { label: 'In Review',   dot: 'var(--col-in-review)',   empty: 'Nothing in review',    Icon: RateReviewIcon },
+  DONE:        { label: 'Done',        dot: 'var(--col-done)',        empty: 'No completed tasks',   Icon: TaskAltIcon },
+  BLOCKED:     { label: 'Blocked',     dot: 'var(--col-blocked)',     empty: 'No blockers — great!', Icon: BlockIcon },
 }
 
 export default function TasksPage() {
   const { user } = useAuth()
   const { showToast } = useToast()
-  const [tasks, setTasks] = useState<Task[]>([])
+  const [tasks, setTasks]       = useState<Task[]>([])
   const [projects, setProjects] = useState<Project[]>([])
   const [showCreate, setShowCreate] = useState(false)
   const [filterPriority, setFilterPriority] = useState('')
@@ -52,7 +61,6 @@ export default function TasksPage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-      {/* Top bar */}
       <div className="page-topbar">
         <div className="page-topbar-left">
           <h1 className="page-topbar-title">Task Board</h1>
@@ -61,16 +69,13 @@ export default function TasksPage() {
         <div className="page-topbar-right">
           {canCreate && (
             <button className="btn-primary-orange" onClick={() => setShowCreate(true)}>
-              <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd"/>
-              </svg>
+              <AddIcon style={{ fontSize: 16 }} />
               Create New Task
             </button>
           )}
         </div>
       </div>
 
-      {/* Toolbar */}
       <div className="tasks-toolbar">
         <span className="filter-label">Filter by:</span>
         <select className="filter-select" value={filterPriority} onChange={e => setFilterPriority(e.target.value)}>
@@ -82,32 +87,31 @@ export default function TasksPage() {
         <span className="tasks-count">{tasks.length} task{tasks.length !== 1 ? 's' : ''}</span>
       </div>
 
-      {/* Board */}
       <div className="board-scroll">
         <div className="board">
           {COLUMNS.map(status => {
-            const col = COL_META[status]
+            const { label, dot, empty, Icon } = COL_META[status]
             const colTasks = tasksByStatus(status)
             return (
               <div key={status} className="column">
                 <div className="column-header">
-                  <div className="column-header-left">
-                    <div className="column-pill">
-                      <div className="column-dot" style={{ background: col.dot }} />
-                      {col.label}
-                      <span className="column-count-badge">{colTasks.length}</span>
-                    </div>
+                  <div className="column-pill">
+                    <div className="column-dot" style={{ background: dot }} />
+                    {label}
+                    <span className="column-count-badge">{colTasks.length}</span>
                   </div>
                   {canCreate && status === 'TODO' && (
-                    <button className="column-add-btn" onClick={() => setShowCreate(true)} title="Add task">+</button>
+                    <button className="column-add-btn" onClick={() => setShowCreate(true)} title="Add task">
+                      <AddIcon style={{ fontSize: 16 }} />
+                    </button>
                   )}
                 </div>
 
                 <div className="column-body">
                   {colTasks.length === 0 ? (
                     <div className="column-empty">
-                      <span className="column-empty-icon">{col.icon}</span>
-                      <span className="column-empty-text">{col.empty}</span>
+                      <Icon style={{ fontSize: 28, opacity: 0.3 }} />
+                      <span className="column-empty-text">{empty}</span>
                     </div>
                   ) : (
                     colTasks.map(task => (

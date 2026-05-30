@@ -1,4 +1,7 @@
 import { useState } from 'react'
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday'
+import BlockIcon from '@mui/icons-material/Block'
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import type { Task, TaskStatus, User } from '../types'
 import { useToast } from '../context/ToastContext'
 import api from '../services/api'
@@ -53,10 +56,10 @@ export default function TaskCard({ task, onUpdate, currentUser }: Props) {
     }
   }
 
-  const dueDate = task.due_date ? new Date(task.due_date) : null
+  const dueDate  = task.due_date ? new Date(task.due_date) : null
   const isOverdue = dueDate && dueDate < new Date() && task.status !== 'DONE'
-  const priority = task.priority.toLowerCase() as 'low' | 'medium' | 'high'
-  const pct = PROGRESS[task.status]
+  const priority  = task.priority.toLowerCase() as 'low' | 'medium' | 'high'
+  const pct       = PROGRESS[task.status]
 
   const assigneeInitials = task.assignee_name
     ? task.assignee_name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
@@ -64,7 +67,6 @@ export default function TaskCard({ task, onUpdate, currentUser }: Props) {
 
   return (
     <div className={`task-card priority-${priority}`}>
-      {/* Progress bar */}
       <div className="task-card-top">
         <span className="task-progress-pct">{pct}%</span>
         {isOverdue && <span className="overdue-badge">Overdue</span>}
@@ -73,13 +75,9 @@ export default function TaskCard({ task, onUpdate, currentUser }: Props) {
         <div className="task-progress-fill" style={{ width: `${pct}%` }} />
       </div>
 
-      {/* Title */}
       <p className="task-card-title">{task.title}</p>
-
-      {/* Description */}
       {task.description && <p className="task-card-desc">{task.description}</p>}
 
-      {/* Meta: priority + due + assignee */}
       <div className="task-card-meta">
         <div className="task-card-meta-left">
           <span className={`priority-pill ${priority}`}>
@@ -88,27 +86,29 @@ export default function TaskCard({ task, onUpdate, currentUser }: Props) {
           </span>
           {dueDate && (
             <span className={`task-due${isOverdue ? ' overdue' : ''}`}>
-              📅 {dueDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+              <CalendarTodayIcon style={{ fontSize: 11 }} />
+              {dueDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
             </span>
           )}
         </div>
         {assigneeInitials && (
           <div className="task-card-meta-right">
-            <div className="assignee-stack">
-              <div className="assignee-chip" title={task.assignee_name ?? ''}>{assigneeInitials}</div>
-            </div>
+            <div className="assignee-chip" title={task.assignee_name ?? ''}>{assigneeInitials}</div>
           </div>
         )}
       </div>
 
-      {/* Actions */}
       {canAdvance() && (
         <div className="task-card-actions">
           <button className="btn-advance" onClick={advance} disabled={advancing}>
-            {advancing ? '…' : `→ ${NEXT_LABEL[task.status]}`}
+            <ArrowForwardIcon style={{ fontSize: 13 }} />
+            {advancing ? 'Moving…' : NEXT_LABEL[task.status]}
           </button>
           {task.status !== 'BLOCKED' && task.status !== 'DONE' && (
-            <button className="btn-block" onClick={markBlocked}>⊘ Block</button>
+            <button className="btn-block" onClick={markBlocked}>
+              <BlockIcon style={{ fontSize: 13 }} />
+              Block
+            </button>
           )}
         </div>
       )}
