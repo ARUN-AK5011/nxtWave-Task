@@ -1,0 +1,205 @@
+@import './variables.css';
+
+.users-page { display: flex; flex-direction: column; height: 100%; }
+
+/* Org invite box */
+.org-invite-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-5);
+  margin-bottom: var(--sp-6);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-4);
+  box-shadow: var(--shadow-sm);
+}
+
+.org-invite-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-md);
+  background: var(--orange-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.org-invite-body { flex: 1; min-width: 0; }
+
+.org-invite-title {
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: var(--sp-1);
+}
+
+.org-invite-sub {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin-bottom: var(--sp-3);
+}
+
+.org-id-copy-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--sp-2) var(--sp-3);
+  max-width: 460px;
+}
+
+.org-id-text {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  word-break: break-all;
+  user-select: all;
+}
+
+.btn-copy {
+  padding: 0.3rem 0.75rem;
+  background: var(--orange-grad);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: opacity var(--t);
+  font-family: var(--font);
+}
+
+.btn-copy:hover { opacity: 0.88; }
+
+/* Members table */
+.members-card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.members-table-head {
+  display: grid;
+  grid-template-columns: 1fr 120px 160px 100px;
+  padding: var(--sp-3) var(--sp-5);
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.members-table-row {
+  display: grid;
+  grid-template-columns: 1fr 120px 160px 100px;
+  padding: var(--sp-4) var(--sp-5);
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+  transition: background var(--t-fast);
+}
+
+.members-table-row:last-child { border-bottom: none; }
+.members-table-row:hover { background: var(--bg); }
+
+.member-info {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+.member-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--orange-grad);
+  color: #fff;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.member-name {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.member-email {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.you-tag {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--orange);
+  background: var(--orange-light);
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--radius-full);
+}
+
+/* Role badge */
+.role-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.role-badge.admin   { background: #FEF2F2; color: #B91C1C; }
+.role-badge.manager { background: #FFFBEB; color: #92400E; }
+.role-badge.member  { background: var(--success-light); color: #15803D; }
+
+/* Role select dropdown */
+.role-select {
+  padding: 0.35rem 0.65rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text);
+  background: var(--surface);
+  cursor: pointer;
+  outline: none;
+  transition: border-color var(--t), box-shadow var(--t);
+  font-family: var(--font);
+  width: 100%;
+}
+
+.role-select:focus {
+  border-color: var(--orange);
+  box-shadow: 0 0 0 3px var(--orange-ring);
+}
+
+.role-select:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Empty + loading */
+.users-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-10) var(--sp-4);
+  color: var(--text-muted);
+  gap: var(--sp-3);
+  text-align: center;
+}
+
+.users-empty-icon { font-size: 2.5rem; opacity: 0.3; }
+.users-empty-text { font-size: var(--text-sm); }

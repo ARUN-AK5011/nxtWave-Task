@@ -5,22 +5,16 @@ import api from '../services/api'
 import '../styles/task-card.css'
 
 const NEXT_STATUS: Partial<Record<TaskStatus, TaskStatus>> = {
-  TODO:        'IN_PROGRESS',
-  IN_PROGRESS: 'IN_REVIEW',
-  IN_REVIEW:   'DONE',
+  TODO: 'IN_PROGRESS', IN_PROGRESS: 'IN_REVIEW', IN_REVIEW: 'DONE',
 }
-
 const NEXT_LABEL: Partial<Record<TaskStatus, string>> = {
-  TODO:        'Start',
-  IN_PROGRESS: 'Review',
-  IN_REVIEW:   'Complete',
+  TODO: 'Start', IN_PROGRESS: 'Review', IN_REVIEW: 'Complete',
+}
+const PROGRESS: Record<TaskStatus, number> = {
+  TODO: 0, IN_PROGRESS: 33, IN_REVIEW: 66, DONE: 100, BLOCKED: 15,
 }
 
-interface Props {
-  task: Task
-  onUpdate: () => void
-  currentUser: User
-}
+interface Props { task: Task; onUpdate: () => void; currentUser: User }
 
 export default function TaskCard({ task, onUpdate, currentUser }: Props) {
   const { showToast } = useToast()
@@ -59,9 +53,10 @@ export default function TaskCard({ task, onUpdate, currentUser }: Props) {
     }
   }
 
-  const dueDate   = task.due_date ? new Date(task.due_date) : null
+  const dueDate = task.due_date ? new Date(task.due_date) : null
   const isOverdue = dueDate && dueDate < new Date() && task.status !== 'DONE'
-  const priority  = task.priority.toLowerCase() as 'low' | 'medium' | 'high'
+  const priority = task.priority.toLowerCase() as 'low' | 'medium' | 'high'
+  const pct = PROGRESS[task.status]
 
   const assigneeInitials = task.assignee_name
     ? task.assignee_name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
@@ -69,37 +64,42 @@ export default function TaskCard({ task, onUpdate, currentUser }: Props) {
 
   return (
     <div className={`task-card priority-${priority}`}>
-      {/* Priority + overdue */}
+      {/* Progress bar */}
       <div className="task-card-top">
-        <span className={`priority-chip ${priority}`}>{task.priority}</span>
+        <span className="task-progress-pct">{pct}%</span>
         {isOverdue && <span className="overdue-badge">Overdue</span>}
+      </div>
+      <div className="task-progress-bar">
+        <div className="task-progress-fill" style={{ width: `${pct}%` }} />
       </div>
 
       {/* Title */}
       <p className="task-card-title">{task.title}</p>
 
       {/* Description */}
-      {task.description && (
-        <p className="task-card-desc">{task.description}</p>
-      )}
+      {task.description && <p className="task-card-desc">{task.description}</p>}
 
-      {/* Meta */}
-      {(task.assignee_name || dueDate) && (
-        <div className="task-card-meta">
-          {task.assignee_name && (
-            <span className="task-meta-item">
-              <span className="assignee-avatar">{assigneeInitials}</span>
-              {task.assignee_name}
-            </span>
-          )}
+      {/* Meta: priority + due + assignee */}
+      <div className="task-card-meta">
+        <div className="task-card-meta-left">
+          <span className={`priority-pill ${priority}`}>
+            <span className="priority-pill-dot" />
+            {task.priority.charAt(0) + task.priority.slice(1).toLowerCase()} Priority
+          </span>
           {dueDate && (
-            <span className="task-meta-item">
-              <span className="task-meta-icon">📅</span>
-              {dueDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+            <span className={`task-due${isOverdue ? ' overdue' : ''}`}>
+              📅 {dueDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
             </span>
           )}
         </div>
-      )}
+        {assigneeInitials && (
+          <div className="task-card-meta-right">
+            <div className="assignee-stack">
+              <div className="assignee-chip" title={task.assignee_name ?? ''}>{assigneeInitials}</div>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Actions */}
       {canAdvance() && (

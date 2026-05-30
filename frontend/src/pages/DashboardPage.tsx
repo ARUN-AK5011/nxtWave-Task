@@ -1,180 +1,127 @@
 import { useState, useEffect, useCallback } from 'react'
-import type { Task, TaskStatus, Project } from '../types'
+import type { Task, Project } from '../types'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
-import TaskCard from '../components/TaskCard'
-import CreateTaskModal from '../components/CreateTaskModal'
-import ManageProjectsModal from '../components/ManageProjectsModal'
-import ManageMembersModal from '../components/ManageMembersModal'
+import '../styles/layout.css'
 import '../styles/dashboard.css'
 
-const COLUMNS: TaskStatus[] = ['TODO', 'IN_PROGRESS', 'IN_REVIEW', 'DONE', 'BLOCKED']
+const STATUS_CLASS: Record<string, string> = {
+  TODO: 'todo', IN_PROGRESS: 'in_progress', IN_REVIEW: 'in_review', DONE: 'done', BLOCKED: 'blocked',
+}
 
-const COL_META: Record<TaskStatus, { label: string; dot: string; empty: string; icon: string }> = {
-  TODO:        { label: 'To Do',       dot: 'var(--col-todo)',        empty: 'No tasks here yet',        icon: '○' },
-  IN_PROGRESS: { label: 'In Progress', dot: 'var(--col-in-progress)', empty: 'Nothing in progress',      icon: '◑' },
-  IN_REVIEW:   { label: 'In Review',   dot: 'var(--col-in-review)',   empty: 'Nothing awaiting review',  icon: '◷' },
-  DONE:        { label: 'Done',        dot: 'var(--col-done)',        empty: 'No completed tasks yet',   icon: '✓' },
-  BLOCKED:     { label: 'Blocked',     dot: 'var(--col-blocked)',     empty: 'No blockers — great!',     icon: '⊘' },
+const STATUS_LABEL: Record<string, string> = {
+  TODO: 'To Do', IN_PROGRESS: 'In Progress', IN_REVIEW: 'In Review', DONE: 'Done', BLOCKED: 'Blocked',
 }
 
 export default function DashboardPage() {
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
   const { showToast } = useToast()
   const [tasks, setTasks]       = useState<Task[]>([])
   const [projects, setProjects] = useState<Project[]>([])
-  const [showCreate, setShowCreate] = useState(false)
-  const [showProjects, setShowProjects] = useState(false)
-  const [showMembers, setShowMembers] = useState(false)
-  const [filterPriority, setFilterPriority] = useState('')
+  const [members, setMembers]   = useState<number>(0)
 
-  const fetchTasks = useCallback(async () => {
+  const fetchAll = useCallback(async () => {
     try {
-      const params: Record<string, string> = {}
-      if (filterPriority) params.priority = filterPriority
-      const { data } = await api.get('/tasks', { params })
-      setTasks(data.data ?? [])
+      const [tRes, pRes] = await Promise.all([
+        api.get('/tasks', { params: { limit: 100 } }),
+        api.get('/projects'),
+      ])
+      setTasks(tRes.data.data ?? [])
+      setProjects(pRes.data.data ?? [])
+
+      if (user?.role === 'ADMIN') {
+        const uRes = await api.get('/users')
+        setMembers((uRes.data.data ?? []).length)
+      }
     } catch {
-      showToast('Failed to load tasks', 'error', 'Please refresh the page')
+      showToast('Failed to load dashboard data', 'error')
     }
-  }, [filterPriority, showToast])
+  }, [user?.role, showToast])
 
-  const fetchProjects = useCallback(async () => {
-    try {
-      const { data } = await api.get('/projects')
-      setProjects(data.data ?? [])
-    } catch {
-      showToast('Failed to load projects', 'error')
-    }
-  }, [showToast])
+  useEffect(() => { fetchAll() }, [fetchAll])
 
-  useEffect(() => { fetchTasks() }, [fetchTasks])
-  useEffect(() => { fetchProjects() }, [fetchProjects])
+  const count = (status: string) => tasks.filter(t => t.status === status).length
+  const done  = count('DONE')
+  const pct   = tasks.length > 0 ? Math.round((done / tasks.length) * 100) : 0
 
-  const tasksByStatus = (s: TaskStatus) => tasks.filter(t => t.status === s)
-  const canCreate = user?.role === 'ADMIN' || user?.role === 'MANAGER'
+  const stats = [
+    { label: 'Total Tasks',  value: tasks.length,        icon: '📋', cls: 'orange',  sub: `${pct}% completed` },
+    { label: 'In Progress',  value: count('IN_PROGRESS'), icon: '⚡', cls: 'blue',   sub: 'Active right now' },
+    { label: 'Completed',    value: done,                 icon: '✓',  cls: 'green',  sub: 'Tasks finished' },
+    { label: 'Blocked',      value: count('BLOCKED'),     icon: '⊘',  cls: 'red',    sub: 'Need attention' },
+    { label: 'Projects',     value: projects.length,      icon: '📁', cls: 'amber',  sub: 'Active projects' },
+    ...(user?.role === 'ADMIN' ? [{ label: 'Team Members', value: members, icon: '👥', cls: 'blue', sub: 'In your org' }] : []),
+  ]
 
-  const initials = user?.name
-    ? user.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
-    : '?'
+  const recent = [...tasks].sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()).slice(0, 8)
+  const projectMap = Object.fromEntries(projects.map(p => [p.id, p.name]))
 
   return (
-    <div className="dashboard">
-      {/* ── Header ── */}
-      <header className="header">
-        <div className="header-left">
-          <div className="header-logo">
-            <div className="header-logo-icon">📋</div>
-            <span className="header-logo-text">TaskTracker</span>
-          </div>
-          <div className="header-divider" />
-          <span className="header-role-badge">{user?.role}</span>
-        </div>
-
-        <div className="header-right">
-          <div className="header-user">
-            <div className="header-avatar">{initials}</div>
-            <span className="header-user-name">{user?.name}</span>
-          </div>
-          <button className="header-logout-btn" onClick={logout}>
-            <span>↩</span> Logout
-          </button>
-        </div>
-      </header>
-
-      {/* ── Toolbar ── */}
-      <div className="toolbar">
-        <div className="toolbar-left">
-          <span className="toolbar-label">Filter:</span>
-          <select
-            className="filter-select"
-            value={filterPriority}
-            onChange={e => setFilterPriority(e.target.value)}
-          >
-            <option value="">All Priorities</option>
-            <option value="LOW">Low</option>
-            <option value="MEDIUM">Medium</option>
-            <option value="HIGH">High</option>
-          </select>
-          <span className="task-count-badge">{tasks.length} task{tasks.length !== 1 ? 's' : ''}</span>
-        </div>
-
-        <div className="toolbar-right">
-          <button className="btn-toolbar" onClick={() => setShowProjects(true)}>
-            📁 Projects
-          </button>
-          {user?.role === 'ADMIN' && (
-            <button className="btn-toolbar" onClick={() => setShowMembers(true)}>
-              👥 Members
-            </button>
-          )}
-          {canCreate && (
-            <button className="btn-create" onClick={() => setShowCreate(true)}>
-              <span className="btn-create-icon">+</span>
-              New Task
-            </button>
-          )}
-        </div>
+    <div className="page-body">
+      {/* Top bar */}
+      <div style={{ marginBottom: 'var(--sp-6)' }}>
+        <h1 style={{ fontSize: 'var(--text-2xl)', fontWeight: 800, color: 'var(--text)', letterSpacing: '-0.02em', marginBottom: 4 }}>
+          Welcome back, {user?.name?.split(' ')[0]} 👋
+        </h1>
+        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>
+          Here's what's happening with your team today.
+        </p>
       </div>
 
-      {/* ── Board ── */}
-      <div className="board-wrap">
-        <div className="board">
-          {COLUMNS.map(status => {
-            const col      = COL_META[status]
-            const colTasks = tasksByStatus(status)
-            return (
-              <div key={status} className="column">
-                <div className="column-header">
-                  <div className="column-header-left">
-                    <div className="column-dot" style={{ background: col.dot }} />
-                    <span className="column-title">{col.label}</span>
-                  </div>
-                  <span className="column-count">{colTasks.length}</span>
-                </div>
-
-                <div className="column-body">
-                  {colTasks.length === 0 ? (
-                    <div className="column-empty">
-                      <span className="column-empty-icon">{col.icon}</span>
-                      <span className="column-empty-text">{col.empty}</span>
-                    </div>
-                  ) : (
-                    colTasks.map(task => (
-                      <TaskCard
-                        key={task.id}
-                        task={task}
-                        onUpdate={fetchTasks}
-                        currentUser={user!}
-                      />
-                    ))
-                  )}
-                </div>
-              </div>
-            )
-          })}
-        </div>
+      {/* Stat cards */}
+      <div className="stat-grid">
+        {stats.map(s => (
+          <div key={s.label} className="stat-card">
+            <div className="stat-card-header">
+              <span className="stat-card-label">{s.label}</span>
+              <div className={`stat-card-icon ${s.cls}`}>{s.icon}</div>
+            </div>
+            <div className="stat-card-value">{s.value}</div>
+            <div className="stat-card-sub">{s.sub}</div>
+          </div>
+        ))}
       </div>
 
-      {/* ── Modals ── */}
-      {showCreate && (
-        <CreateTaskModal
-          projects={projects}
-          onClose={() => setShowCreate(false)}
-          onCreated={() => { setShowCreate(false); fetchTasks(); fetchProjects() }}
-        />
-      )}
-      {showProjects && (
-        <ManageProjectsModal
-          onClose={() => { setShowProjects(false); fetchProjects() }}
-        />
-      )}
-      {showMembers && (
-        <ManageMembersModal
-          onClose={() => setShowMembers(false)}
-        />
-      )}
+      {/* Recent tasks table */}
+      <p className="dash-section-title">Recent Activity</p>
+      <div className="recent-tasks-table">
+        <div className="table-head">
+          <span className="th">Task</span>
+          <span className="th">Project</span>
+          <span className="th">Status</span>
+          <span className="th">Priority</span>
+          <span className="th">Due</span>
+        </div>
+        {recent.length === 0 ? (
+          <div style={{ padding: 'var(--sp-8)', textAlign: 'center', color: 'var(--text-muted)', fontSize: 'var(--text-sm)' }}>
+            No tasks yet — create one from the Tasks page
+          </div>
+        ) : (
+          recent.map(t => (
+            <div key={t.id} className="table-row">
+              <span className="td-title">{t.title}</span>
+              <span className="td-project">{projectMap[t.project_id] ?? '—'}</span>
+              <span>
+                <span className={`status-pill ${STATUS_CLASS[t.status]}`}>
+                  {STATUS_LABEL[t.status]}
+                </span>
+              </span>
+              <span>
+                <span className={`status-pill ${t.priority.toLowerCase()}`} style={{
+                  background: t.priority === 'HIGH' ? '#FEF2F2' : t.priority === 'MEDIUM' ? '#FFFBEB' : '#F0FDF4',
+                  color: t.priority === 'HIGH' ? '#DC2626' : t.priority === 'MEDIUM' ? '#D97706' : '#16A34A',
+                }}>
+                  {t.priority}
+                </span>
+              </span>
+              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
+                {t.due_date ? new Date(t.due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '—'}
+              </span>
+            </div>
+          ))
+        )}
+      </div>
     </div>
   )
 }
