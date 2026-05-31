@@ -34,6 +34,14 @@ func (s Status) CanTransitionTo(next Status) bool {
 	return false
 }
 
+// UserBasic is a lightweight user projection used inside Task responses.
+type UserBasic struct {
+	ID    string `json:"id"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
+	Role  Role   `json:"role"`
+}
+
 type Task struct {
 	ID             string      `json:"id"`
 	OrganizationID string      `json:"organization_id"`
