@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"task-tracker/internal/apperr"
 	"task-tracker/internal/cache"
@@ -150,12 +151,14 @@ func (s *TaskService) UpdateStatus(ctx context.Context, id, orgID, requestorID s
 		if err == pgx.ErrNoRows {
 			return nil, apperr.NotFound("task")
 		}
+		log.Printf("UpdateStatus GetByID error: %v", err)
 		return nil, apperr.Internal()
 	}
 
 	if role == models.RoleMember {
 		isAssignee, err := s.taskRepo.IsAssignee(ctx, id, requestorID)
 		if err != nil {
+			log.Printf("UpdateStatus IsAssignee error: %v", err)
 			return nil, apperr.Internal()
 		}
 		if !isAssignee {
@@ -169,10 +172,10 @@ func (s *TaskService) UpdateStatus(ctx context.Context, id, orgID, requestorID s
 	}
 
 	if err := s.taskRepo.UpdateStatus(ctx, id, orgID, newStatus); err != nil {
+		log.Printf("UpdateStatus DB error: %v", err)
 		return nil, apperr.Internal()
 	}
 
-	// Invalidate caches for all assignees.
 	assigneeIDs, _ := s.taskRepo.GetAssigneeIDs(ctx, id)
 	s.invalidateAssigneesCache(ctx, assigneeIDs)
 

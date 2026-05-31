@@ -34,21 +34,21 @@ func main() {
 	log.Println("connected to Redis")
 
 	// Repositories
-	userRepo    := repository.NewUserRepo(db)
-	taskRepo    := repository.NewTaskRepo(db)
-	projRepo    := repository.NewProjectRepo(db)
+	userRepo := repository.NewUserRepo(db)
+	taskRepo := repository.NewTaskRepo(db)
+	projRepo := repository.NewProjectRepo(db)
 	commentRepo := repository.NewCommentRepo(db)
 
 	// Services
-	authSvc    := services.NewAuthService(userRepo, cfg.JWTSecret, cfg.JWTRefreshSecret, cfg.AccessTokenTTL, cfg.RefreshTokenTTL)
-	taskSvc    := services.NewTaskService(taskRepo, redisCache)
+	authSvc := services.NewAuthService(userRepo, cfg.JWTSecret, cfg.JWTRefreshSecret, cfg.AccessTokenTTL, cfg.RefreshTokenTTL)
+	taskSvc := services.NewTaskService(taskRepo, redisCache)
 	commentSvc := services.NewCommentService(commentRepo, taskRepo)
 
 	// Handlers
-	authH    := handlers.NewAuthHandler(authSvc)
-	taskH    := handlers.NewTaskHandler(taskSvc)
-	userH    := handlers.NewUserHandler(userRepo)
-	projH    := handlers.NewProjectHandler(projRepo)
+	authH := handlers.NewAuthHandler(authSvc)
+	taskH := handlers.NewTaskHandler(taskSvc)
+	userH := handlers.NewUserHandler(userRepo)
+	projH := handlers.NewProjectHandler(projRepo)
 	commentH := handlers.NewCommentHandler(commentSvc)
 
 	r := router.New(cfg.JWTSecret, authH, taskH, userH, projH, commentH)

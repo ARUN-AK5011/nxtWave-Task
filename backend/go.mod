@@ -11,7 +11,7 @@ require (
 	github.com/redis/go-redis/v9 v9.20.0
 	golang.org/x/crypto v0.52.0
 )
-
+ 
 require (
 	github.com/bytedance/gopkg v0.1.3 // indirect
 	github.com/bytedance/sonic v1.15.0 // indirect

@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"log"
 	"strings"
 	"task-tracker/internal/models"
 
@@ -93,11 +94,13 @@ func (r *TaskRepo) GetByID(ctx context.Context, id, orgID string) (*models.Task,
 		&t.CompletedAt, &t.CreatedAt, &t.UpdatedAt,
 	)
 	if err != nil {
+		log.Printf("GetByID scan error: %v", err)
 		return nil, err
 	}
 
 	assigneeMap, err := r.fetchAssigneesForTasks(ctx, []string{t.ID})
 	if err != nil {
+		log.Printf("GetByID fetchAssignees error: %v", err)
 		return nil, err
 	}
 	if assignees, ok := assigneeMap[t.ID]; ok {
@@ -212,8 +215,8 @@ func (r *TaskRepo) Update(ctx context.Context, t *models.Task, newAssigneeIDs []
 
 func (r *TaskRepo) UpdateStatus(ctx context.Context, id, orgID string, status models.Status) error {
 	_, err := r.db.Exec(ctx, `
-		UPDATE tasks SET status=$1, updated_at=NOW(),
-		                 completed_at = CASE WHEN $1 = 'DONE' THEN NOW() ELSE completed_at END
+		UPDATE tasks SET status=$1::task_status, updated_at=NOW(),
+		                 completed_at = CASE WHEN $1::task_status = 'DONE' THEN NOW() ELSE completed_at END
 		WHERE id=$2 AND organization_id=$3`, status, id, orgID)
 	return err
 }
