@@ -14,6 +14,7 @@ import (
 	"task-tracker/internal/repository"
 	"task-tracker/internal/router"
 	"task-tracker/internal/services"
+	"task-tracker/internal/ws"
 	"time"
 )
 
@@ -34,30 +35,37 @@ func main() {
 	log.Println("connected to Redis")
 
 	// Repositories
-	userRepo := repository.NewUserRepo(db)
-	taskRepo := repository.NewTaskRepo(db)
-	projRepo := repository.NewProjectRepo(db)
+	userRepo    := repository.NewUserRepo(db)
+	taskRepo    := repository.NewTaskRepo(db)
+	projRepo    := repository.NewProjectRepo(db)
 	commentRepo := repository.NewCommentRepo(db)
 
 	// Services
-	authSvc := services.NewAuthService(userRepo, cfg.JWTSecret, cfg.JWTRefreshSecret, cfg.AccessTokenTTL, cfg.RefreshTokenTTL)
-	taskSvc := services.NewTaskService(taskRepo, redisCache)
+	authSvc    := services.NewAuthService(userRepo, cfg.JWTSecret, cfg.JWTRefreshSecret, cfg.AccessTokenTTL, cfg.RefreshTokenTTL)
+	taskSvc    := services.NewTaskService(taskRepo, redisCache)
 	commentSvc := services.NewCommentService(commentRepo, taskRepo)
 
-	// Handlers
-	authH := handlers.NewAuthHandler(authSvc)
-	taskH := handlers.NewTaskHandler(taskSvc)
-	userH := handlers.NewUserHandler(userRepo)
-	projH := handlers.NewProjectHandler(projRepo)
-	commentH := handlers.NewCommentHandler(commentSvc)
+	// WebSocket hub + overdue checker
+	wsHub := ws.NewHub(db)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go wsHub.StartOverdueChecker(ctx)
 
-	r := router.New(cfg.JWTSecret, authH, taskH, userH, projH, commentH)
+	// Handlers
+	authH    := handlers.NewAuthHandler(authSvc)
+	taskH    := handlers.NewTaskHandler(taskSvc)
+	userH    := handlers.NewUserHandler(userRepo)
+	projH    := handlers.NewProjectHandler(projRepo)
+	commentH := handlers.NewCommentHandler(commentSvc)
+	wsH      := handlers.NewWSHandler(wsHub, cfg.JWTSecret)
+
+	r := router.New(cfg.JWTSecret, authH, taskH, userH, projH, commentH, wsH)
 
 	srv := &http.Server{
 		Addr:         ":" + cfg.Port,
 		Handler:      r,
 		ReadTimeout:  15 * time.Second,
-		WriteTimeout: 15 * time.Second,
+		WriteTimeout: 0, // no timeout — WebSocket connections are long-lived
 	}
 
 	go func() {
@@ -71,9 +79,10 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	if err := srv.Shutdown(ctx); err != nil {
+	cancel() // stop overdue checker
+	shutCtx, shutCancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer shutCancel()
+	if err := srv.Shutdown(shutCtx); err != nil {
 		log.Fatalf("server shutdown: %v", err)
 	}
 	log.Println("server stopped")

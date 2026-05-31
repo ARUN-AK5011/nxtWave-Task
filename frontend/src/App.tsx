@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ToastProvider } from './context/ToastContext'
+import { NotificationProvider } from './context/NotificationContext'
 import ToastContainer from './components/Toast'
 import Layout from './components/Layout'
 import LoginPage from './pages/LoginPage'
@@ -54,7 +55,9 @@ export default function App() {
     <BrowserRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
       <ToastProvider>
         <AuthProvider>
-          <AppRoutes />
+          <NotificationProvider>
+            <AppRoutes />
+          </NotificationProvider>
         </AuthProvider>
         <ToastContainer />
       </ToastProvider>

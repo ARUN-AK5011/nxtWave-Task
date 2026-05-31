@@ -6,6 +6,7 @@ import FolderOpenIcon from '@mui/icons-material/FolderOpen'
 import GroupIcon from '@mui/icons-material/Group'
 import LogoutIcon from '@mui/icons-material/Logout'
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn'
+import NotificationBell from './NotificationBell'
 import '../styles/layout.css'
 
 const NAV = [
@@ -54,6 +55,9 @@ export default function Sidebar() {
       </nav>
 
       <div className="sidebar-user">
+        <div style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: 'var(--sp-2)' }}>
+          <NotificationBell />
+        </div>
         <div className="sidebar-user-info">
           <div className="sidebar-avatar">{initials}</div>
           <div className="sidebar-user-meta">

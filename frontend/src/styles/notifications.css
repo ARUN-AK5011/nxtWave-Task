@@ -1,0 +1,189 @@
+@import './variables.css';
+
+/* ── Bell button ── */
+.notif-bell-btn {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-md);
+  background: transparent;
+  border: 1px solid var(--sidebar-border);
+  color: var(--sidebar-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background var(--t), color var(--t), border-color var(--t);
+  flex-shrink: 0;
+}
+
+.notif-bell-btn:hover {
+  background: var(--sidebar-hover);
+  color: rgba(255,255,255,0.85);
+  border-color: rgba(255,255,255,0.2);
+}
+
+.notif-bell-btn.has-unread {
+  border-color: rgba(249,115,22,0.5);
+  color: var(--orange);
+}
+
+/* Badge */
+.notif-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 16px;
+  height: 16px;
+  background: var(--orange);
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 800;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  line-height: 1;
+  border: 2px solid var(--sidebar-bg);
+  animation: badgePop 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+@keyframes badgePop {
+  from { transform: scale(0); }
+  to   { transform: scale(1); }
+}
+
+/* ── Dropdown panel ── */
+.notif-panel {
+  position: fixed;
+  bottom: 80px;
+  left: calc(var(--sidebar-width) + 12px);
+  width: 340px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+  z-index: 300;
+  overflow: hidden;
+  animation: panelIn 0.18s cubic-bezier(0.16,1,0.3,1);
+}
+
+@keyframes panelIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.notif-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-4) var(--sp-5);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.notif-panel-title {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--text);
+}
+
+.notif-panel-actions {
+  display: flex;
+  gap: var(--sp-2);
+}
+
+.notif-panel-action {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-sm);
+  transition: background var(--t-fast), color var(--t-fast);
+  font-family: var(--font);
+}
+
+.notif-panel-action:hover {
+  background: var(--border);
+  color: var(--text);
+}
+
+/* List */
+.notif-list {
+  max-height: 340px;
+  overflow-y: auto;
+}
+
+.notif-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-8) var(--sp-4);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.notif-empty-icon { font-size: 2rem; opacity: 0.3; }
+.notif-empty-text { font-size: var(--text-sm); }
+
+/* Single notification row */
+.notif-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-5);
+  border-bottom: 1px solid var(--border);
+  transition: background var(--t-fast);
+  cursor: default;
+}
+
+.notif-item:last-child { border-bottom: none; }
+
+.notif-item.unread { background: #FFFBEB; }
+.notif-item:hover  { background: var(--bg); }
+
+.notif-item-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  background: var(--warning-light);
+  color: var(--warning);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.notif-item-body { flex: 1; min-width: 0; }
+
+.notif-item-title {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+
+.notif-item-meta {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+.notif-unread-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--orange);
+  flex-shrink: 0;
+  margin-top: 5px;
+}

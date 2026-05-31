@@ -16,6 +16,7 @@ func New(
 	userH    *handlers.UserHandler,
 	projH    *handlers.ProjectHandler,
 	commentH *handlers.CommentHandler,
+	wsH      *handlers.WSHandler,
 ) *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Logger(), gin.Recovery())
@@ -27,6 +28,9 @@ func New(
 	}))
 
 	r.GET("/health", func(c *gin.Context) { c.JSON(200, gin.H{"status": "ok"}) })
+
+	// WebSocket — auth handled inside handler via ?token= query param.
+	r.GET("/api/v1/ws", wsH.ServeWS)
 
 	auth := r.Group("/api/v1/auth")
 	{
