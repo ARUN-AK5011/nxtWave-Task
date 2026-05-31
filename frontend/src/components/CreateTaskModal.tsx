@@ -8,7 +8,7 @@ import AssigneeSelect from './AssigneeSelect'
 import DatePicker from './DatePicker'
 import api from '../services/api'
 import '../styles/modal.css'
-
+ 
 interface FormData {
   project_id: string
   title: string

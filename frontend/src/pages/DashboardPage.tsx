@@ -80,7 +80,7 @@ export default function DashboardPage() {
           Here's what's happening with your team today.
         </p>
       </div>
-
+ 
       <div className="stat-grid">
         {stats.map(s => (
           <div key={s.label} className="stat-card">

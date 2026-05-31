@@ -9,7 +9,7 @@ import CustomSelect from '../components/CustomSelect'
 import api from '../services/api'
 import '../styles/layout.css'
 import '../styles/users.css'
-
+ 
 export default function UsersPage() {
   const { user: currentUser } = useAuth()
   const { showToast } = useToast()

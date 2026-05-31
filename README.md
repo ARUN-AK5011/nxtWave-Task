@@ -233,7 +233,7 @@ ws://localhost:8080/api/v1/ws?token=<access_token>
   "due_date": "2026-05-30T00:00:00Z"
 }
 ```
-
+ 
 **Who is notified:** All assignees of the task + every ADMIN and MANAGER in the organisation.
 
 **Frequency:** Checked every 60 seconds. Each (task, user) pair is notified at most once per hour to prevent spam.

@@ -11,7 +11,7 @@ import { useToast } from '../context/ToastContext'
 import api from '../services/api'
 import '../styles/modal.css'
 import '../styles/task-detail.css'
-
+ 
 const NEXT_STATUS: Partial<Record<TaskStatus, TaskStatus>> = {
   TODO: 'IN_PROGRESS', IN_PROGRESS: 'IN_REVIEW', IN_REVIEW: 'DONE',
 }

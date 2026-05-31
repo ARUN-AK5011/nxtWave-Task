@@ -12,7 +12,7 @@ import api from '../services/api'
 import '../styles/layout.css'
 import '../styles/projects.css'
 import '../styles/modal.css'
-
+ 
 interface FormData { name: string; description: string }
 
 export default function ProjectsPage() {

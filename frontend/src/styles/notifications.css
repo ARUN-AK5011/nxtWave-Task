@@ -16,7 +16,7 @@
   transition: background var(--t), color var(--t), border-color var(--t);
   flex-shrink: 0;
 }
-
+ 
 .notif-bell-btn:hover {
   background: var(--sidebar-hover);
   color: rgba(255,255,255,0.85);

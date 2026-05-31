@@ -10,7 +10,7 @@
   transition: box-shadow var(--t), transform var(--t-fast), border-color var(--t);
   cursor: default;
   position: relative;
-}
+} 
 
 .task-card:hover {
   box-shadow: var(--shadow-md);

@@ -6,7 +6,7 @@ import '../styles/select.css'
 
 export interface SelectOption {
   value: string
-  label: string
+  label: string 
 }
 
 interface DropPos { top: number; left: number; width: number }

@@ -58,7 +58,7 @@ export interface TaskComment {
   user_role: Role
   content: string
   created_at: string
-}
+} 
 
 export interface PaginatedResponse<T> {
   data: T[]

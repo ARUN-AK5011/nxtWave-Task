@@ -13,7 +13,7 @@ import UsersPage from './pages/UsersPage'
 import { ReactNode } from 'react'
 
 function PrivateRoute({ children }: { children: ReactNode }) {
-  const { user, loading } = useAuth()
+  const { user, loading } = useAuth() 
   if (loading) return <div className="app-loading"><div className="spinner" />Loading…</div>
   return user ? <>{children}</> : <Navigate to="/login" replace />
 }

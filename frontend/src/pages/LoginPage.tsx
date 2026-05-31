@@ -13,7 +13,7 @@ export default function LoginPage() {
   const navigate  = useNavigate()
   const [error, setError] = useState('')
   const { register, handleSubmit, formState: { isSubmitting, errors } } = useForm<FormData>()
-
+ 
   const onSubmit = async (data: FormData) => {
     setError('')
     try {

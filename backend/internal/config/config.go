@@ -6,13 +6,13 @@ import (
 )
 
 type Config struct {
-	Port            string
-	DatabaseURL     string
-	RedisURL        string
-	JWTSecret       string
+	Port             string
+	DatabaseURL      string
+	RedisURL         string
+	JWTSecret        string
 	JWTRefreshSecret string
-	AccessTokenTTL  int
-	RefreshTokenTTL int
+	AccessTokenTTL   int
+	RefreshTokenTTL  int
 }
 
 func Load() *Config {

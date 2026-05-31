@@ -5,7 +5,7 @@
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: var(--sp-5);
 }
-
+ 
 /* Create card (dashed) */
 .project-create-card {
   background: var(--surface);

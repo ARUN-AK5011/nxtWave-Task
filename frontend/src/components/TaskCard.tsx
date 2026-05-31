@@ -12,7 +12,7 @@ interface Props {
   currentUser: User
   onOpenDetail: (task: Task) => void
 }
-
+ 
 export default function TaskCard({ task, onOpenDetail }: Props) {
   const dueDate   = task.due_date ? new Date(task.due_date) : null
   const isOverdue = dueDate && dueDate < new Date() && task.status !== 'DONE'

@@ -8,7 +8,7 @@ import LogoutIcon from '@mui/icons-material/Logout'
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn'
 import NotificationBell from './NotificationBell'
 import '../styles/layout.css'
-
+ 
 const NAV = [
   { label: 'Dashboard', path: '/dashboard', Icon: DashboardIcon },
   { label: 'Tasks',     path: '/tasks',     Icon: TaskAltIcon },

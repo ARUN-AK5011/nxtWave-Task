@@ -42,7 +42,7 @@ export default function RegisterPage() {
       setError(err.response?.data?.message ?? 'Registration failed')
     }
   }
-
+ 
   return (
     <div className="auth-page">
       <div className="auth-brand">

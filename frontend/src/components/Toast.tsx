@@ -12,7 +12,7 @@ const ICONS: Record<ToastType, React.ReactElement> = {
   error:   <ErrorOutlineIcon       style={{ fontSize: 18 }} />,
   warning: <WarningAmberIcon       style={{ fontSize: 18 }} />,
   info:    <InfoOutlinedIcon       style={{ fontSize: 18 }} />,
-}
+} 
 
 const TITLES: Record<ToastType, string> = {
   success: 'Success',

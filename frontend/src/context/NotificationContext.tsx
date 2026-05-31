@@ -9,7 +9,7 @@ export interface Notification {
   receivedAt: string
   read: boolean
 }
-
+ 
 interface NotifCtx {
   notifications: Notification[]
   unreadCount: number

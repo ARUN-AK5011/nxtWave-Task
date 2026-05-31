@@ -13,7 +13,7 @@
   align-items: flex-start;
   gap: var(--sp-4);
   box-shadow: var(--shadow-sm);
-}
+} 
 
 .org-invite-icon {
   width: 42px;

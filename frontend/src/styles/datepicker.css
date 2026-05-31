@@ -16,7 +16,7 @@
   text-align: left;
   font-family: var(--font);
   transition: border-color var(--t), box-shadow var(--t);
-}
+} 
 
 .dp-trigger:focus { outline: none; }
 .dp-trigger:hover { border-color: var(--border-hover); }

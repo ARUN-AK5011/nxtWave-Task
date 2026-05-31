@@ -11,7 +11,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--sp-2);
+  gap: var(--sp-2); 
   padding: 0.62rem var(--sp-3);
   border: 1.5px solid var(--border);
   border-radius: var(--radius-md);

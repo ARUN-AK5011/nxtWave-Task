@@ -7,7 +7,7 @@
   gap: var(--sp-4);
   margin-bottom: var(--sp-6);
 }
-
+ 
 .stat-card {
   background: var(--surface);
   border-radius: var(--radius-lg);

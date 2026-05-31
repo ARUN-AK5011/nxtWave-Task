@@ -13,7 +13,7 @@ interface Props {
   placeholder?: string
   error?: boolean
 }
-
+ 
 export default function AssigneeSelect({ members, selected, onChange, placeholder = 'Select assignees…', error }: Props) {
   const [open, setOpen]   = useState(false)
   const [pos, setPos]     = useState({ top: 0, left: 0, width: 0 })
