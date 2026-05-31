@@ -1,0 +1,12 @@
+{
+  "go.goroot": "/usr/lib/go",
+  "go.toolsManagement.autoUpdate": true,
+  "[go]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "golang.go"
+  },
+  "gopls": {
+    "build.directoryFilters": ["-**/node_modules", "-**/dist"],
+    "ui.semanticTokens": true
+  }
+}
