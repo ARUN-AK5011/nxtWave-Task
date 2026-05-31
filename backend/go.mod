@@ -1,6 +1,6 @@
 module task-tracker
 
-go 1.26.1
+go 1.23.0
 
 require (
 	github.com/gin-contrib/cors v1.7.7
