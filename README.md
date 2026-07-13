@@ -180,6 +180,7 @@ CREATE INDEX idx_tasks_project       ON tasks(project_id);
 CREATE INDEX idx_tasks_org           ON tasks(organization_id);
 CREATE INDEX idx_users_email         ON users(email);
 
+
 -- Migration 002
 CREATE INDEX idx_task_assignees_task ON task_assignees(task_id);
 CREATE INDEX idx_task_assignees_user ON task_assignees(user_id);  -- primary filter for MEMBER list
