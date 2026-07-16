@@ -1,4 +1,4 @@
-# Team Task Tracker
+# Team Task Tracker system
 
 A REST API and React frontend for managing tasks within a team organisation. Built with **Go (Gin)**, **PostgreSQL**, **Redis**, and **React (TypeScript)**.
 
