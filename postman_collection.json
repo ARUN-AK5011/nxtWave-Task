@@ -67,7 +67,8 @@
             "script": {
               "exec": [
                 "const r = pm.response.json();",
-                "pm.collectionVariables.set('access_token',  r.access_token);",
+   
+             "pm.collectionVariables.set('access_token',  r.access_token);",
                 "pm.collectionVariables.set('refresh_token', r.refresh_token);",
                 "pm.test('Status 200', () => pm.response.to.have.status(200));"
               ]
